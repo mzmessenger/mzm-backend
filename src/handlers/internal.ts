@@ -1,7 +1,132 @@
 import { Request } from 'express'
+import { ObjectID } from 'mongodb'
+import { escape, trim, isEmpty } from 'validator'
 import logger from '../lib/logger'
+import redis from '../lib/redis'
+import * as db from '../lib/db'
+import { Message } from '../lib/types'
+import { initUser, getRooms, getUsersInRoom } from '../logic/users'
+import { saveMessage, getMessages } from '../logic/messages'
+import { Room } from '../types'
+
+type SocketPost =
+  | {
+      cmd: 'socket:connection'
+      payload: { user: string; twitterUserName: string }
+    }
+  | {
+      cmd: 'messages:room'
+      room: string
+    }
+  | {
+      cmd: 'message:send'
+      message: string
+      room: string
+    }
+  | {
+      cmd: 'rooms:get'
+    }
+
+type SendMessage =
+  | {
+      user: string
+      cmd: 'rooms'
+      rooms: Room[]
+    }
+  | {
+      user: string
+      cmd: 'rooms'
+      rooms: Room[]
+    }
+  | {
+      user: string
+      cmd: 'message:receive'
+      message: Message
+      room: string
+    }
+  | {
+      user: string
+      cmd: 'messages:room'
+      messages: Message[]
+    }
+
+async function addQueue(data: Object) {
+  const message = JSON.stringify(data)
+  await redis.xadd('stream:socket:message', '*', 'message', message)
+  logger.info('[queue:add]', 'stream:socket:message', message)
+}
 
 export async function socket(req: Request) {
-  logger.info(req.body)
+  const user: string = req.headers['x-user-id'] as string
+  const data = req.body as SocketPost
+  if (data.cmd === 'socket:connection') {
+    await initUser(data.payload.user, {
+      twitterUserName: data.payload.twitterUserName
+    })
+    const rooms = await getRooms(data.payload.user)
+    const room: SendMessage = { cmd: 'rooms', rooms, user: data.payload.user }
+    return await addQueue(room)
+  } else if (data.cmd === 'message:send') {
+    console.log(data)
+    const message = escape(trim(data.message))
+    const room = escape(trim(data.room))
+    // todo: send bad request
+    if (isEmpty(message) || isEmpty(room)) {
+      return
+    }
+    const saved = await saveMessage(message, room, user)
+    const u = await db.collections.users.findOne({
+      _id: new ObjectID(user)
+    })
+    const send: SendMessage = {
+      user: user,
+      cmd: 'message:receive',
+      message: {
+        id: saved.insertedId.toHexString(),
+        userId: user,
+        userAccount: u.account,
+        message: message,
+        createdAt: new Date(Date.now())
+      },
+      room: room
+    }
+    await addQueue(send)
+
+    // todo: too heavy
+    const users = await getUsersInRoom(room)
+    for (const [id] of Object.entries(users)) {
+      const user = users[id]
+      send.user = user
+      addQueue(message)
+    }
+
+    return
+  } else if (data.cmd === 'messages:room') {
+    const room = escape(trim(data.room))
+    // todo: send bad request
+    if (isEmpty(room)) {
+      return
+    }
+    const filter: db.Enter = {
+      userId: new ObjectID(user),
+      roomId: new ObjectID(room)
+    }
+    const exist = await db.collections.enter.findOne(filter)
+    // todo: send bad request
+    if (!exist) {
+      return
+    }
+    const messages = await getMessages(room)
+    const send: SendMessage = {
+      user: user,
+      cmd: 'messages:room',
+      messages: messages
+    }
+    return await addQueue(send)
+  } else if (data.cmd === 'rooms:get') {
+    const rooms = await getRooms(user)
+    const room: SendMessage = { user: user, cmd: 'rooms', rooms }
+    return await addQueue(room)
+  }
   return
 }

@@ -8,7 +8,7 @@ import * as db from '../lib/db'
 export async function getUserInfo(req: Request) {
   const id = getUserId(req)
   const user = await db.collections.users.findOne({ _id: new ObjectID(id) })
-  return { id, account: user.account }
+  return { id, account: user.account ? user.account : null }
 }
 
 export async function updateAccount(req: Request) {
