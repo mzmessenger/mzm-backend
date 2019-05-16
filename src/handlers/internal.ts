@@ -17,6 +17,7 @@ type SocketPost =
   | {
       cmd: 'messages:room'
       room: string
+      id?: string
     }
   | {
       cmd: 'message:send'
@@ -47,6 +48,7 @@ type SendMessage =
   | {
       user: string
       cmd: 'messages:room'
+      id?: string
       messages: Message[]
     }
 
@@ -67,7 +69,6 @@ export async function socket(req: Request) {
     const room: SendMessage = { cmd: 'rooms', rooms, user: data.payload.user }
     return await addQueue(room)
   } else if (data.cmd === 'message:send') {
-    console.log(data)
     const message = escape(trim(data.message))
     const room = escape(trim(data.room))
     // todo: send bad request
@@ -116,11 +117,18 @@ export async function socket(req: Request) {
     if (!exist) {
       return
     }
-    const messages = await getMessages(room)
+    let id = null
+    if (data.id) {
+      id = escape(trim(data.id))
+    }
+    const messages = await getMessages(room, id)
     const send: SendMessage = {
       user: user,
       cmd: 'messages:room',
       messages: messages
+    }
+    if (id) {
+      send.id = id
     }
     return await addQueue(send)
   } else if (data.cmd === 'rooms:get') {

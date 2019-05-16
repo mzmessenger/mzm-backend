@@ -17,26 +17,35 @@ export async function saveMessage(
   return await db.collections.messages.insertOne(insert)
 }
 
-export async function getMessages(roomId: string) {
-  const cursor = await db.collections.messages
-    .aggregate<db.Message & { user: db.User }>([
-      {
-        $match: { roomId: new ObjectID(roomId) }
-      },
-      {
-        $lookup: {
-          from: db.COLLECTION_NAMES.USERS,
-          localField: 'userId',
-          foreignField: '_id',
-          as: 'user'
-        }
+export async function getMessages(roomId: string, thresholdId?: string) {
+  const query: Object[] = [
+    {
+      $match: { roomId: new ObjectID(roomId) }
+    },
+    {
+      $lookup: {
+        from: db.COLLECTION_NAMES.USERS,
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'user'
       }
-    ])
+    }
+  ]
+
+  if (thresholdId) {
+    query.push({
+      $match: { _id: { $lt: new ObjectID(thresholdId) } }
+    })
+  }
+
+  const cursor = await db.collections.messages
+    .aggregate<db.Message & { user: db.User }>(query)
+    .sort({ _id: -1 })
     .limit(MESSAGE_LIMIT)
 
   const messages: Message[] = []
   for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
-    messages.push({
+    messages.unshift({
       id: doc._id.toHexString(),
       message: doc.message,
       userId: doc.userId.toHexString(),
