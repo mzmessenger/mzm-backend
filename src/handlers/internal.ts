@@ -48,8 +48,9 @@ type SendMessage =
   | {
       user: string
       cmd: 'messages:room'
-      id?: string
       messages: Message[]
+      room: string
+      existHistory: boolean
     }
 
 async function addQueue(data: Object) {
@@ -121,14 +122,13 @@ export async function socket(req: Request) {
     if (data.id) {
       id = escape(trim(data.id))
     }
-    const messages = await getMessages(room, id)
+    const { existHistory, messages } = await getMessages(room, id)
     const send: SendMessage = {
       user: user,
       cmd: 'messages:room',
-      messages: messages
-    }
-    if (id) {
-      send.id = id
+      room,
+      messages: messages,
+      existHistory
     }
     return await addQueue(send)
   } else if (data.cmd === 'rooms:get') {

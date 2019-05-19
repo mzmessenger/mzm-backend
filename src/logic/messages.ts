@@ -17,7 +17,10 @@ export async function saveMessage(
   return await db.collections.messages.insertOne(insert)
 }
 
-export async function getMessages(roomId: string, thresholdId?: string) {
+export async function getMessages(
+  roomId: string,
+  thresholdId?: string
+): Promise<{ existHistory: boolean; messages: Message[] }> {
   const query: Object[] = [
     {
       $match: { roomId: new ObjectID(roomId) }
@@ -53,5 +56,5 @@ export async function getMessages(roomId: string, thresholdId?: string) {
       userAccount: doc.user[0] ? doc.user[0].account : null
     })
   }
-  return messages
+  return { existHistory: messages.length >= MESSAGE_LIMIT, messages }
 }
