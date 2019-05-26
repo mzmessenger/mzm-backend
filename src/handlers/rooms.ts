@@ -5,8 +5,11 @@ import { BadRequest, Forbidden } from '../lib/errors'
 import { getUserId } from '../lib/utils'
 import * as db from '../lib/db'
 import logger from '../lib/logger'
+import { enterRoom as enterRoomLogic } from '../logic/rooms'
 
-export async function createRoom(req: Request) {
+export async function createRoom(
+  req: Request
+): Promise<{ id: string; name: string }> {
   const user = getUserId(req)
   const name = escape(trim(req.body.name))
   if (isEmpty(name)) {
@@ -14,19 +17,15 @@ export async function createRoom(req: Request) {
   }
 
   const found = await db.collections.rooms.findOne({ name: name })
+  // @todo throw error if room is rocked
   if (found) {
-    logger.info(
-      `[room:create] ${name} (${found._id.toHexString()}) is exist ${user}`
-    )
-    throw new Forbidden('Forbidden')
+    await enterRoomLogic(new ObjectID(user), new ObjectID(found._id))
+    return { id: found._id.toHexString(), name: found.name }
   }
 
   const room: db.Room = { name, createdBy: user }
   const inserted = await db.collections.rooms.insertOne(room)
-  await db.collections.enter.insertOne({
-    userId: new ObjectID(user),
-    roomId: inserted.insertedId
-  })
+  await enterRoomLogic(new ObjectID(user), inserted.insertedId)
   const id = inserted.insertedId.toHexString()
   logger.info(`[room:create] ${name} (${id}) created by ${user}`)
   return { id, name }
@@ -39,11 +38,7 @@ export async function enterRoom(req: Request) {
     throw new BadRequest({ reason: 'room is empty' })
   }
 
-  const enter: db.Enter = {
-    userId: new ObjectID(user),
-    roomId: new ObjectID(roomId)
-  }
-  await db.collections.enter.insertOne(enter)
+  await enterRoomLogic(new ObjectID(user), new ObjectID(roomId))
 }
 
 export async function exitRoom(req: Request) {
@@ -52,7 +47,8 @@ export async function exitRoom(req: Request) {
   if (isEmpty(roomId)) {
     throw new BadRequest({ reason: 'room is empty' })
   }
-  await db.collections.enter.deleteOne({
+  // @todo generalはだめ
+  await db.collections.enter.deleteMany({
     userId: new ObjectID(user),
     roomId: new ObjectID(roomId)
   })

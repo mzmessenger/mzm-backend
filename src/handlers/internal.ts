@@ -7,9 +7,10 @@ import * as db from '../lib/db'
 import { Message } from '../lib/types'
 import { initUser, getRooms, getUsersInRoom } from '../logic/users'
 import { saveMessage, getMessages } from '../logic/messages'
+import { enterRoom } from '../logic/rooms'
 import { Room } from '../types'
 
-type SocketPost =
+type ReceiveMessage =
   | {
       cmd: 'socket:connection'
       payload: { user: string; twitterUserName: string }
@@ -27,13 +28,13 @@ type SocketPost =
   | {
       cmd: 'rooms:get'
     }
+  | {
+      cmd: 'rooms:enter'
+      id?: string
+      name?: string
+    }
 
 type SendMessage =
-  | {
-      user: string
-      cmd: 'rooms'
-      rooms: Room[]
-    }
   | {
       user: string
       cmd: 'rooms'
@@ -52,8 +53,14 @@ type SendMessage =
       room: string
       existHistory: boolean
     }
+  | {
+      user: string
+      cmd: 'rooms:enter:success'
+      id: string
+      name: string
+    }
 
-async function addQueue(data: Object) {
+async function addQueue(data: SendMessage) {
   const message = JSON.stringify(data)
   await redis.xadd('stream:socket:message', '*', 'message', message)
   logger.info('[queue:add]', 'stream:socket:message', message)
@@ -61,7 +68,7 @@ async function addQueue(data: Object) {
 
 export async function socket(req: Request) {
   const user: string = req.headers['x-user-id'] as string
-  const data = req.body as SocketPost
+  const data = req.body as ReceiveMessage
   if (data.cmd === 'socket:connection') {
     await initUser(data.payload.user, {
       twitterUserName: data.payload.twitterUserName
@@ -99,7 +106,7 @@ export async function socket(req: Request) {
     for (const [id] of Object.entries(users)) {
       const user = users[id]
       send.user = user
-      addQueue(message)
+      addQueue(send)
     }
 
     return
@@ -135,6 +142,34 @@ export async function socket(req: Request) {
     const rooms = await getRooms(user)
     const room: SendMessage = { user: user, cmd: 'rooms', rooms }
     return await addQueue(room)
+  } else if (data.cmd === 'rooms:enter') {
+    let room: db.Room = null
+    if (data.id) {
+      const id = escape(trim(data.id))
+      room = await db.collections.rooms.findOne({ _id: new ObjectID(id) })
+    } else if (data.name) {
+      const name = escape(trim(data.name))
+      room = await db.collections.rooms.findOne({ name: name })
+    }
+
+    // @todo send bad request
+    if (!room) {
+      return
+    }
+
+    await enterRoom(new ObjectID(user), room._id)
+
+    const rooms = await getRooms(user)
+    await Promise.all([
+      addQueue({ user, cmd: 'rooms', rooms }),
+      addQueue({
+        user,
+        cmd: 'rooms:enter:success',
+        id: room._id.toHexString(),
+        name: room.name
+      })
+    ])
+    return
   }
   return
 }
