@@ -1,14 +1,12 @@
 import { Request } from 'express'
 import { ObjectID } from 'mongodb'
 import { escape, trim, isEmpty } from 'validator'
-import logger from '../lib/logger'
-import redis from '../lib/redis'
 import * as db from '../lib/db'
-import { Message } from '../lib/types'
+import { addQueueToUser, addQueueToSocket } from '../lib/provider'
 import { initUser, getRooms, getUsersInRoom } from '../logic/users'
 import { saveMessage, getMessages } from '../logic/messages'
 import { enterRoom } from '../logic/rooms'
-import { Room } from '../types'
+import { SendMessage } from '../types'
 
 type ReceiveMessage =
   | {
@@ -34,40 +32,9 @@ type ReceiveMessage =
       name?: string
     }
 
-type SendMessage =
-  | {
-      user: string
-      cmd: 'rooms'
-      rooms: Room[]
-    }
-  | {
-      user: string
-      cmd: 'message:receive'
-      message: Message
-      room: string
-    }
-  | {
-      user: string
-      cmd: 'messages:room'
-      messages: Message[]
-      room: string
-      existHistory: boolean
-    }
-  | {
-      user: string
-      cmd: 'rooms:enter:success'
-      id: string
-      name: string
-    }
-
-async function addQueue(data: SendMessage) {
-  const message = JSON.stringify(data)
-  await redis.xadd('stream:socket:message', '*', 'message', message)
-  logger.info('[queue:add]', 'stream:socket:message', message)
-}
-
 export async function socket(req: Request) {
   const user: string = req.headers['x-user-id'] as string
+  const socket: string = req.headers['x-socket-id'] as string
   const data = req.body as ReceiveMessage
   if (data.cmd === 'socket:connection') {
     await initUser(data.payload.user, {
@@ -75,7 +42,7 @@ export async function socket(req: Request) {
     })
     const rooms = await getRooms(data.payload.user)
     const room: SendMessage = { cmd: 'rooms', rooms, user: data.payload.user }
-    return await addQueue(room)
+    return await addQueueToUser(data.payload.user, room)
   } else if (data.cmd === 'message:send') {
     const message = escape(trim(data.message))
     const room = escape(trim(data.room))
@@ -99,14 +66,13 @@ export async function socket(req: Request) {
       },
       room: room
     }
-    await addQueue(send)
 
     // todo: too heavy
     const users = await getUsersInRoom(room)
     for (const [id] of Object.entries(users)) {
       const user = users[id]
       send.user = user
-      addQueue(send)
+      addQueueToUser(user, send)
     }
 
     return
@@ -137,11 +103,11 @@ export async function socket(req: Request) {
       messages: messages,
       existHistory
     }
-    return await addQueue(send)
+    return await addQueueToSocket(socket, send)
   } else if (data.cmd === 'rooms:get') {
     const rooms = await getRooms(user)
     const room: SendMessage = { user: user, cmd: 'rooms', rooms }
-    return await addQueue(room)
+    return await addQueueToSocket(socket, room)
   } else if (data.cmd === 'rooms:enter') {
     let room: db.Room = null
     if (data.id) {
@@ -161,8 +127,8 @@ export async function socket(req: Request) {
 
     const rooms = await getRooms(user)
     await Promise.all([
-      addQueue({ user, cmd: 'rooms', rooms }),
-      addQueue({
+      addQueueToUser(user, { user, cmd: 'rooms', rooms }),
+      addQueueToSocket(socket, {
         user,
         cmd: 'rooms:enter:success',
         id: room._id.toHexString(),

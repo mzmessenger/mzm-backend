@@ -1,7 +1,7 @@
 import { ObjectID } from 'mongodb'
 import { GENERAL_ROOM_NAME } from '../config'
-import * as db from '../lib/db'
 import { Room as SendRoom } from '../types'
+import * as db from '../lib/db'
 
 async function createUser(userId: ObjectID, twitterUserName?: string) {
   const update: { _id: ObjectID; account?: string } = { _id: userId }

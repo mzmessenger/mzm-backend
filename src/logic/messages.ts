@@ -1,7 +1,7 @@
 import { ObjectID } from 'mongodb'
 import { MESSAGE_LIMIT } from '../config'
 import * as db from '../lib/db'
-import { Message } from '../lib/types'
+import { Message } from '../types'
 
 export async function saveMessage(
   message: string,

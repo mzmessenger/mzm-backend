@@ -1,7 +1,7 @@
 import { Request } from 'express'
 import { ObjectID } from 'mongodb'
 import { escape, trim, isEmpty } from 'validator'
-import { BadRequest, Forbidden } from '../lib/errors'
+import { BadRequest } from '../lib/errors'
 import { getUserId } from '../lib/utils'
 import * as db from '../lib/db'
 import logger from '../lib/logger'
