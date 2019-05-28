@@ -9,6 +9,9 @@ export async function addQueueToUser(target: string, data: SendMessage) {
 }
 
 export async function addQueueToSocket(target: string, data: SendMessage) {
+  if (data.user) {
+    delete data.user
+  }
   const message = JSON.stringify({ ...data, socket: target })
   await redis.xadd('stream:socket:message', '*', 'message', message)
   logger.info('[queue:add:socket]', message)
