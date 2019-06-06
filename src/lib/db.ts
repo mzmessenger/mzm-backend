@@ -6,12 +6,14 @@ export const collections: {
   rooms: Collection<Room>
   enter: Collection<Enter>
   users: Collection<User>
+  removed: Collection<Removed>
   messages: Collection<Message>
 } = {
   rooms: null,
   enter: null,
   users: null,
-  messages: null
+  messages: null,
+  removed: null
 }
 
 export enum COLLECTION_NAMES {
@@ -30,6 +32,7 @@ export async function connect() {
   collections.enter = db.collection(COLLECTION_NAMES.ENTER)
   collections.users = db.collection(COLLECTION_NAMES.USERS)
   collections.messages = db.collection('messages')
+  collections.removed = db.collection('removed')
 
   logger.info('[db] connected mongodb')
 
@@ -51,6 +54,10 @@ export type Enter = {
 export type User = {
   _id: ObjectId
   account: string
+}
+
+export type Removed = User & {
+  originId: ObjectId
 }
 
 export type Message = {

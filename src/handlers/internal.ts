@@ -3,7 +3,7 @@ import { ObjectID } from 'mongodb'
 import { escape, trim, isEmpty } from 'validator'
 import * as db from '../lib/db'
 import { addQueueToUser, addQueueToSocket } from '../lib/provider'
-import { initUser, getRooms, getUsersInRoom } from '../logic/users'
+import { getRooms, getUsersInRoom } from '../logic/users'
 import { saveMessage, getMessages } from '../logic/messages'
 import { enterRoom } from '../logic/rooms'
 import { SendMessage } from '../types'
@@ -37,9 +37,6 @@ export async function socket(req: Request) {
   const socket: string = req.headers['x-socket-id'] as string
   const data = req.body as ReceiveMessage
   if (data.cmd === 'socket:connection') {
-    await initUser(data.payload.user, {
-      twitterUserName: data.payload.twitterUserName
-    })
     const rooms = await getRooms(data.payload.user)
     const room: SendMessage = { cmd: 'rooms', rooms, user: data.payload.user }
     return await addQueueToUser(data.payload.user, room)

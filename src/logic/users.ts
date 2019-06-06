@@ -4,13 +4,11 @@ import { Room as SendRoom } from '../types'
 import * as db from '../lib/db'
 
 async function createUser(userId: ObjectID, twitterUserName?: string) {
-  const update: { _id: ObjectID; account?: string } = { _id: userId }
-  const find = await db.collections.users.findOne({ _id: userId })
-  // account初期化処理
-  if (find && !find.account) {
-    update.account = twitterUserName ? twitterUserName : null
+  const update = {
+    _id: userId,
+    account: twitterUserName ? twitterUserName : null
   }
-  await db.collections.users.findOneAndUpdate(
+  return await db.collections.users.findOneAndUpdate(
     { _id: userId },
     { $set: update },
     { upsert: true }
@@ -34,12 +32,23 @@ async function enterGeneral(userId: ObjectID) {
   }
 }
 
+export async function setAccount(userId: ObjectID, twitterUserName: string) {
+  return await db.collections.users.updateOne(
+    { _id: userId },
+    { $set: { account: twitterUserName } }
+  )
+}
+
 export async function initUser(
   userId: string,
   { twitterUserName }: { twitterUserName?: string }
 ) {
   const id = new ObjectID(userId)
-  await Promise.all([createUser(id, twitterUserName), enterGeneral(id)])
+  const [user] = await Promise.all([
+    createUser(id, twitterUserName),
+    enterGeneral(id)
+  ])
+  return user
 }
 
 export async function getRooms(userId: string): Promise<SendRoom[]> {
