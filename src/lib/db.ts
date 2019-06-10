@@ -19,22 +19,32 @@ export const collections: {
 export enum COLLECTION_NAMES {
   ROOMS = 'rooms',
   USERS = 'users',
-  ENTER = 'enter'
+  ENTER = 'enter',
+  MESSAGES = 'messages',
+  REMOVED = 'removed'
 }
 
+let connected = null
+
 export async function connect() {
+  if (connected) {
+    return connected
+  }
+
   const client = await MongoClient.connect(MONGODB_URI, {
     useNewUrlParser: true
   })
 
   const db = client.db('mzm')
-  collections.rooms = db.collection(COLLECTION_NAMES.ROOMS)
-  collections.enter = db.collection(COLLECTION_NAMES.ENTER)
-  collections.users = db.collection(COLLECTION_NAMES.USERS)
-  collections.messages = db.collection('messages')
-  collections.removed = db.collection('removed')
+  collections.rooms = db.collection<Room>(COLLECTION_NAMES.ROOMS)
+  collections.enter = db.collection<Enter>(COLLECTION_NAMES.ENTER)
+  collections.users = db.collection<User>(COLLECTION_NAMES.USERS)
+  collections.messages = db.collection<Message>(COLLECTION_NAMES.MESSAGES)
+  collections.removed = db.collection<Removed>(COLLECTION_NAMES.REMOVED)
 
   logger.info('[db] connected mongodb')
+
+  connected = client
 
   return client
 }

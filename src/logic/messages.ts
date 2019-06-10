@@ -12,7 +12,7 @@ export async function saveMessage(
     message: message,
     roomId: new ObjectID(roomId),
     userId: new ObjectID(userId),
-    createdAt: new Date(Date.now())
+    createdAt: new Date()
   }
   return await db.collections.messages.insertOne(insert)
 }
