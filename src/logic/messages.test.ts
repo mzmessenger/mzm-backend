@@ -1,14 +1,17 @@
 jest.mock('../lib/logger')
 
 import { ObjectID } from 'mongodb'
-import { initDb, dropCollection } from '../testUtil'
+import { dropCollection } from '../../jest/testUtil'
 import * as db from '../lib/db'
 import { saveMessage, getMessages } from './messages'
 import { MESSAGE_LIMIT } from '../config'
 
 beforeAll(async () => {
-  await db.connect()
-  return await initDb()
+  return await db.connect()
+})
+
+afterAll(async () => {
+  await db.close()
 })
 
 beforeEach(() => {

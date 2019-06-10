@@ -24,11 +24,11 @@ export enum COLLECTION_NAMES {
   REMOVED = 'removed'
 }
 
-let connected = null
+let connection: MongoClient = null
 
 export async function connect() {
-  if (connected) {
-    return connected
+  if (connection) {
+    return connection
   }
 
   const client = await MongoClient.connect(MONGODB_URI, {
@@ -42,11 +42,17 @@ export async function connect() {
   collections.messages = db.collection<Message>(COLLECTION_NAMES.MESSAGES)
   collections.removed = db.collection<Removed>(COLLECTION_NAMES.REMOVED)
 
-  logger.info('[db] connected mongodb')
+  if (process.env.NODE_ENV !== 'test') {
+    logger.info('[db] connected mongodb')
+  }
 
-  connected = client
+  connection = client
 
   return client
+}
+
+export async function close() {
+  connection.close()
 }
 
 export type Room = {

@@ -1,7 +1,7 @@
 jest.mock('./logger')
 jest.mock('./redis', () => ({ xadd: jest.fn() }))
 import redis from './redis'
-import { getMockType } from '../testUtil'
+import { getMockType } from '../../jest/testUtil'
 
 const xadd = getMockType(redis.xadd)
 

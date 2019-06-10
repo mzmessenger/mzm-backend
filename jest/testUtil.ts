@@ -1,27 +1,30 @@
 import assert from 'assert'
 import { MongoClient } from 'mongodb'
-import { MONGODB_URI } from './config'
 
 export function getMockType(arg) {
   return <jest.Mock<typeof arg>>arg
 }
 
-let db = null
+let connection: MongoClient = null
 
 export async function getDbConnection() {
   assert.strictEqual(process.env.NODE_ENV, 'test')
 
-  if (db) {
-    return db
+  if (connection) {
+    return connection
   }
 
-  const connection = await MongoClient.connect(MONGODB_URI, {
+  const client = await MongoClient.connect(process.env.MONGODB_TEST_URI, {
     useNewUrlParser: true
   })
 
-  db = connection
+  connection = client
 
-  return connection
+  return client
+}
+
+export async function tearDown() {
+  await connection.close()
 }
 
 export async function initDb() {
