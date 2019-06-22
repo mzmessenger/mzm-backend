@@ -2,11 +2,13 @@ import { ObjectID } from 'mongodb'
 import { GENERAL_ROOM_NAME } from '../config'
 import { Room as SendRoom } from '../types'
 import * as db from '../lib/db'
+import { getAccountString } from '../lib/utils'
 
 async function createUser(userId: ObjectID, twitterUserName?: string) {
+  const account = getAccountString({ twitterUserName })
   const update = {
     _id: userId,
-    account: twitterUserName ? twitterUserName : null
+    account: account
   }
   return await db.collections.users.findOneAndUpdate(
     { _id: userId },
