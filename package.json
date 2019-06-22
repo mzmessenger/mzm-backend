@@ -10,6 +10,7 @@
     "format": "prettier --write src/**/*.ts",
     "lint": "eslint --ext .ts,.js src",
     "pretest": "npm run build",
+    "jest": "jset",
     "test": "jest"
   },
   "license": "MIT",

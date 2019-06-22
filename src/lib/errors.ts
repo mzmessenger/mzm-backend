@@ -11,7 +11,7 @@ interface HttpResponse {
 }
 
 export class BadRequest extends HttpError implements HttpResponse {
-  readonly status: number = 401
+  readonly status: number = 400
 
   constructor(res: Object | string) {
     super('Bad Request')

@@ -3,20 +3,20 @@ import { ObjectID } from 'mongodb'
 import { escape, trim, isEmpty } from 'validator'
 import { NotFound, BadRequest } from '../lib/errors'
 import { getUserId } from '../lib/utils'
-import { initUser } from '../logic/users'
+import { popAccount, isValidAccount, initUser } from '../logic/users'
 import * as db from '../lib/db'
 
 export async function signUp(req: Request) {
   const id = getUserId(req)
-  if (!req.body.account) {
+  const account = popAccount(req.body.account)
+  if (!account) {
     throw new BadRequest('account is empty')
   }
-  const account = escape(trim(req.body.account))
-  if (isEmpty(account, { ignore_whitespace: true })) {
-    throw new BadRequest('account is empty')
+  if (!isValidAccount(account)) {
+    throw new BadRequest('account is not valid')
   }
 
-  const user = await db.collections.users.findOne({ _id: new ObjectID(id) })
+  const user = await db.collections.users.findOne({ account: account })
   if (user) {
     throw new BadRequest('account is already created')
   }
@@ -45,12 +45,12 @@ export async function getUserInfo(req: Request) {
 
 export async function updateAccount(req: Request) {
   const user = getUserId(req)
-  if (!req.body.account) {
+  const account = popAccount(req.body.account)
+  if (!account) {
     throw new BadRequest('account is empty')
   }
-  const account = escape(trim(req.body.account))
-  if (isEmpty(account, { ignore_whitespace: true })) {
-    throw new BadRequest('account is empty')
+  if (!isValidAccount(account)) {
+    throw new BadRequest('account is not valid')
   }
 
   const userId = new ObjectID(user)

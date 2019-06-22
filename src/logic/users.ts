@@ -1,19 +1,22 @@
 import { ObjectID } from 'mongodb'
+import { escape, trim, isEmpty } from 'validator'
 import { GENERAL_ROOM_NAME } from '../config'
 import { Room as SendRoom } from '../types'
 import logger from '../lib/logger'
 import * as db from '../lib/db'
 
-async function createUser(userId: ObjectID, account: string) {
-  const update = {
-    _id: userId,
-    account: account
+export function popAccount(account: string): string {
+  if (!account) {
+    return ''
   }
-  return await db.collections.users.findOneAndUpdate(
-    { _id: userId },
-    { $set: update },
-    { upsert: true }
-  )
+  return escape(trim(account))
+}
+
+export function isValidAccount(account: string): boolean {
+  if (isEmpty(account, { ignore_whitespace: true })) {
+    return false
+  }
+  return /^[a-zA-Z\d]+$/.test(account)
 }
 
 async function enterGeneral(userId: ObjectID) {
@@ -35,7 +38,7 @@ async function enterGeneral(userId: ObjectID) {
 
 export async function initUser(userId: ObjectID, account: string) {
   const [user] = await Promise.all([
-    createUser(userId, account),
+    db.collections.users.insertOne({ _id: userId, account: account }),
     enterGeneral(userId)
   ])
   logger.info('[logic/user] initUser', userId, account)

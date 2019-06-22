@@ -1,5 +1,8 @@
+jest.mock('../lib/logger')
+
 import { Request } from 'express'
 import { ObjectID } from 'mongodb'
+import { dropCollection } from '../../jest/testUtil'
 import { BadRequest, NotFound } from '../lib/errors'
 import * as db from '../lib/db'
 import { init } from '../logic/server'
@@ -10,7 +13,11 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
-  await db.close()
+  return await db.close()
+})
+
+beforeEach(async () => {
+  return await dropCollection(db.COLLECTION_NAMES.USERS)
 })
 
 test('signUp success', async () => {
@@ -30,6 +37,30 @@ test('signUp success', async () => {
   }
 
   await signUp((req as any) as Request)
+})
+
+test('signUp bad request', async () => {
+  expect.assertions(1)
+
+  const created = new ObjectID()
+  const account = 'aaa'
+
+  await db.collections.users.insertOne({ _id: created, account: account })
+
+  const req = {
+    headers: {
+      'x-user-id': new ObjectID()
+    },
+    body: {
+      account: account
+    }
+  }
+
+  try {
+    await signUp((req as any) as Request)
+  } catch (e) {
+    expect(e instanceof BadRequest).toStrictEqual(true)
+  }
 })
 
 test.each([
