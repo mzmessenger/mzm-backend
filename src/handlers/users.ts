@@ -1,14 +1,13 @@
 import { Request } from 'express'
 import { ObjectID } from 'mongodb'
-import { escape, trim, isEmpty } from 'validator'
 import { NotFound, BadRequest } from '../lib/errors'
-import { getUserId } from '../lib/utils'
-import { popAccount, isValidAccount, initUser } from '../logic/users'
+import { getUserId, popParam } from '../lib/utils'
+import { isValidAccount, initUser } from '../logic/users'
 import * as db from '../lib/db'
 
 export async function signUp(req: Request) {
   const id = getUserId(req)
-  const account = popAccount(req.body.account)
+  const account = popParam(req.body.account)
   if (!account) {
     throw new BadRequest('account is empty')
   }
@@ -45,7 +44,7 @@ export async function getUserInfo(req: Request) {
 
 export async function updateAccount(req: Request) {
   const user = getUserId(req)
-  const account = popAccount(req.body.account)
+  const account = popParam(req.body.account)
   if (!account) {
     throw new BadRequest('account is empty')
   }

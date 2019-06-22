@@ -1,17 +1,19 @@
 import { Request } from 'express'
 import { ObjectID } from 'mongodb'
 import { escape, trim, isEmpty } from 'validator'
+import { GENERAL_ROOM_NAME } from '../config'
 import { BadRequest } from '../lib/errors'
 import { getUserId } from '../lib/utils'
 import * as db from '../lib/db'
 import logger from '../lib/logger'
+import { popParam } from '../lib/utils'
 import { enterRoom as enterRoomLogic } from '../logic/rooms'
 
 export async function createRoom(
   req: Request
 ): Promise<{ id: string; name: string }> {
   const user = getUserId(req)
-  const name = escape(trim(req.body.name))
+  const name = popParam(req.body.name)
   if (isEmpty(name)) {
     throw new BadRequest({ reason: 'name is empty' })
   }
@@ -33,23 +35,33 @@ export async function createRoom(
 
 export async function enterRoom(req: Request) {
   const user = getUserId(req)
-  const roomId = escape(trim(req.body.room))
-  if (isEmpty(roomId)) {
+  const room = popParam(req.body.room)
+  if (isEmpty(room)) {
     throw new BadRequest({ reason: 'room is empty' })
   }
 
-  await enterRoomLogic(new ObjectID(user), new ObjectID(roomId))
+  await enterRoomLogic(new ObjectID(user), new ObjectID(room))
 }
 
 export async function exitRoom(req: Request) {
   const user = getUserId(req)
-  const roomId = escape(trim(req.body.room))
-  if (isEmpty(roomId)) {
+  const room = popParam(req.body.room)
+  if (isEmpty(room)) {
     throw new BadRequest({ reason: 'room is empty' })
   }
-  // @todo generalはだめ
+
+  const roomId = new ObjectID(room)
+
+  const general = await db.collections.rooms.findOne({
+    name: GENERAL_ROOM_NAME
+  })
+
+  if (room === general._id.toHexString()) {
+    throw new BadRequest({ reason: 'general room' })
+  }
+
   await db.collections.enter.deleteMany({
     userId: new ObjectID(user),
-    roomId: new ObjectID(roomId)
+    roomId
   })
 }

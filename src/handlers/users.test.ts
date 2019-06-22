@@ -39,7 +39,7 @@ test('signUp success', async () => {
   await signUp((req as any) as Request)
 })
 
-test('signUp bad request', async () => {
+test('signUp already exist', async () => {
   expect.assertions(1)
 
   const created = new ObjectID()
@@ -67,9 +67,7 @@ test.each([
   ['null', null],
   ['undefined', undefined],
   ['空文字', ''],
-  ['space', ' '],
-  ['space2', '　'],
-  ['space3', '　 　']
+  ['space', ' ']
 ])('signUp fail (account: %s)', async (_label, account) => {
   expect.assertions(1)
 

@@ -1,9 +1,4 @@
 jest.mock('../lib/logger')
-jest.mock('../lib/db', () => {
-  return {
-    collections: { rooms: { updateOne: jest.fn() } }
-  }
-})
 
 import { Request, Response } from 'express'
 
@@ -12,6 +7,14 @@ import * as HttpErrors from '../lib/errors'
 import * as db from '../lib/db'
 import { GENERAL_ROOM_NAME } from '../config'
 import { getMockType } from '../../jest/testUtil'
+
+beforeAll(async () => {
+  return await db.connect()
+})
+
+afterAll(async () => {
+  return await db.close()
+})
 
 test('errorHandler (Internal Server Error)', cb => {
   expect.assertions(4)
@@ -89,16 +92,23 @@ test.each([[null], [undefined], ['']])(
 )
 
 test('init', async () => {
-  const updateOne = getMockType(db.collections.rooms.updateOne)
-  updateOne.mockClear()
-  updateOne.mockResolvedValue('')
-
   await init()
 
-  // サーバ起動時に general 部屋を作成している
-  expect(updateOne.mock.calls.length).toBe(1)
-  const [filter, set, option] = updateOne.mock.calls[0]
-  expect(filter).toMatchObject({ name: GENERAL_ROOM_NAME })
-  expect(set['$set'].name).toStrictEqual(GENERAL_ROOM_NAME)
-  expect(option.upsert).toStrictEqual(true)
+  const general = await db.collections.rooms
+    .find({ name: GENERAL_ROOM_NAME })
+    .toArray()
+
+  expect(general.length).toStrictEqual(1)
+  expect(general[0].name).toStrictEqual(GENERAL_ROOM_NAME)
+})
+
+test('init twice', async () => {
+  await init()
+  await init()
+
+  const general = await db.collections.rooms
+    .find({ name: GENERAL_ROOM_NAME })
+    .toArray()
+
+  expect(general.length).toStrictEqual(1)
 })

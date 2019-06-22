@@ -1,16 +1,9 @@
 import { ObjectID } from 'mongodb'
-import { escape, trim, isEmpty } from 'validator'
+import { isEmpty } from 'validator'
 import { GENERAL_ROOM_NAME } from '../config'
 import { Room as SendRoom } from '../types'
 import logger from '../lib/logger'
 import * as db from '../lib/db'
-
-export function popAccount(account: string): string {
-  if (!account) {
-    return ''
-  }
-  return escape(trim(account))
-}
 
 export function isValidAccount(account: string): boolean {
   if (isEmpty(account, { ignore_whitespace: true })) {
