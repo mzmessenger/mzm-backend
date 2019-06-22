@@ -11,7 +11,7 @@ import { SendMessage } from '../types'
 type ReceiveMessage =
   | {
       cmd: 'socket:connection'
-      payload: { user: string; twitterUserName: string }
+      payload: { user: string }
     }
   | {
       cmd: 'messages:room'

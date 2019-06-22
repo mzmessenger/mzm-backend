@@ -1,8 +1,10 @@
 jest.mock('../lib/logger')
 
 import { ObjectID } from 'mongodb'
+import { GENERAL_ROOM_NAME } from '../config'
 import * as db from '../lib/db'
-import { setAccount } from './users'
+import { init } from './server'
+import { initUser } from './users'
 
 beforeAll(async () => {
   await db.connect()
@@ -12,21 +14,22 @@ afterAll(async () => {
   await db.close()
 })
 
-test('setAccount', async () => {
+test('initUser', async () => {
+  // create general room
+  await init()
+
   const userId = new ObjectID()
+  const account = 'aaa'
 
-  const create = await db.collections.users.insertOne({
-    _id: userId,
-    account: null
-  })
+  await initUser(userId, account)
 
-  expect(create.insertedId.toHexString()).toStrictEqual(userId.toHexString())
+  // user
+  const foundUser = await db.collections.users.findOne({ _id: userId })
+  expect(userId.toHexString()).toStrictEqual(foundUser._id.toHexString())
+  expect(account).toStrictEqual(foundUser.account)
 
-  const account = 'set'
-
-  await setAccount(userId, account)
-
-  const found = await db.collections.users.findOne({ _id: create.insertedId })
-
-  expect(found._id.toHexString()).toStrictEqual(userId.toHexString())
+  // default room
+  const foundRooms = await db.collections.rooms.find().toArray()
+  expect(foundRooms.length).toStrictEqual(1)
+  expect(foundRooms[0].name).toStrictEqual(GENERAL_ROOM_NAME)
 })

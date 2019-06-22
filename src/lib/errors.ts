@@ -27,3 +27,12 @@ export class Forbidden extends HttpError implements HttpResponse {
     this.res = res
   }
 }
+
+export class NotFound extends HttpError implements HttpResponse {
+  readonly status: number = 404
+
+  constructor(res: Object | string) {
+    super('Not Found')
+    this.res = res
+  }
+}

@@ -21,6 +21,7 @@ app.post('/api/rooms', checkLogin, jsonParser, wrap(rooms.createRoom))
 app.post('/api/rooms/enter', checkLogin, jsonParser, wrap(rooms.enterRoom))
 app.delete('/api/rooms/enter', checkLogin, jsonParser, wrap(rooms.exitRoom))
 app.get('/api/user/@me', checkLogin, jsonParser, wrap(user.getUserInfo))
+app.post('/api/user/signup', checkLogin, jsonParser, wrap(user.signUp))
 app.post(
   '/api/user/@me/account',
   checkLogin,

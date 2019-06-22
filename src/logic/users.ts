@@ -1,11 +1,10 @@
 import { ObjectID } from 'mongodb'
 import { GENERAL_ROOM_NAME } from '../config'
 import { Room as SendRoom } from '../types'
+import logger from '../lib/logger'
 import * as db from '../lib/db'
-import { getAccountString } from '../lib/utils'
 
-async function createUser(userId: ObjectID, twitterUserName?: string) {
-  const account = getAccountString({ twitterUserName })
+async function createUser(userId: ObjectID, account: string) {
   const update = {
     _id: userId,
     account: account
@@ -34,22 +33,12 @@ async function enterGeneral(userId: ObjectID) {
   }
 }
 
-export async function setAccount(userId: ObjectID, twitterUserName: string) {
-  return await db.collections.users.updateOne(
-    { _id: userId },
-    { $set: { account: twitterUserName } }
-  )
-}
-
-export async function initUser(
-  userId: string,
-  { twitterUserName }: { twitterUserName?: string }
-) {
-  const id = new ObjectID(userId)
+export async function initUser(userId: ObjectID, account: string) {
   const [user] = await Promise.all([
-    createUser(id, twitterUserName),
-    enterGeneral(id)
+    createUser(userId, account),
+    enterGeneral(userId)
   ])
+  logger.info('[logic/user] initUser', userId, account)
   return user
 }
 
