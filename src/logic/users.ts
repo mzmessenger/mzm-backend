@@ -40,7 +40,7 @@ export async function initUser(userId: ObjectID, account: string) {
 
 export async function getRooms(userId: string): Promise<SendRoom[]> {
   const cursor = await db.collections.enter.aggregate<
-    db.Enter & { room: db.Room }
+    db.Enter & { room: db.Room[] }
   >([
     { $match: { userId: new ObjectID(userId) } },
     {
@@ -54,7 +54,7 @@ export async function getRooms(userId: string): Promise<SendRoom[]> {
   ])
   const rooms: SendRoom[] = []
   for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
-    const room: db.Room = doc.room[0]
+    const room = doc.room[0]
     rooms.push({ id: room._id.toHexString(), name: room.name })
   }
   return rooms

@@ -40,7 +40,23 @@ test('initUser', async () => {
   expect(account).toStrictEqual(foundUser.account)
 
   // default room
-  const foundRooms = await db.collections.rooms.find().toArray()
+  const foundRooms = await db.collections.enter
+    .aggregate<db.Enter & { room: db.Room[] }>([
+      {
+        $match: { userId: userId }
+      },
+      {
+        $lookup: {
+          from: db.COLLECTION_NAMES.ROOMS,
+          localField: 'roomId',
+          foreignField: '_id',
+          as: 'room'
+        }
+      }
+    ])
+    .toArray()
+
+  // general にだけ入室している
   expect(foundRooms.length).toStrictEqual(1)
-  expect(foundRooms[0].name).toStrictEqual(GENERAL_ROOM_NAME)
+  expect(foundRooms[0].room[0].name).toStrictEqual(GENERAL_ROOM_NAME)
 })

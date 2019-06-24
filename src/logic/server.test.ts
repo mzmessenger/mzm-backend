@@ -6,7 +6,6 @@ import { errorHandler, checkLogin, init } from './server'
 import * as HttpErrors from '../lib/errors'
 import * as db from '../lib/db'
 import { GENERAL_ROOM_NAME } from '../config'
-import { getMockType } from '../../jest/testUtil'
 
 beforeAll(async () => {
   return await db.connect()

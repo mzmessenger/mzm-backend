@@ -42,7 +42,7 @@ export async function getMessages(
   }
 
   const cursor = await db.collections.messages
-    .aggregate<db.Message & { user: db.User }>(query)
+    .aggregate<db.Message & { user: db.User[] }>(query)
     .sort({ _id: -1 })
     .limit(MESSAGE_LIMIT)
 
