@@ -6,6 +6,7 @@
   "scripts": {
     "start": "ts-node src/server.ts | bunyan",
     "prebuild": "npm run lint",
+    "cleanup": "rm -rf dist/",
     "build": "tsc -p tsconfig.json",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint --ext .ts,.js src",

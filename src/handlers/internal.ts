@@ -36,11 +36,7 @@ export async function socket(req: Request) {
   const user: string = req.headers['x-user-id'] as string
   const socket: string = req.headers['x-socket-id'] as string
   const data = req.body as ReceiveMessage
-  if (data.cmd === 'socket:connection') {
-    const rooms = await getRooms(data.payload.user)
-    const room: SendMessage = { cmd: 'rooms', rooms, user: data.payload.user }
-    return await addQueueToUser(data.payload.user, room)
-  } else if (data.cmd === 'message:send') {
+  if (data.cmd === 'message:send') {
     const message = escape(trim(data.message))
     const room = escape(trim(data.room))
     // todo: send bad request
