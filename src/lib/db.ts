@@ -58,7 +58,7 @@ export async function close() {
 export type Room = {
   _id?: ObjectId
   name: string
-  createdBy?: string
+  createdBy: string
 }
 
 export type Enter = {

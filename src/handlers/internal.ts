@@ -5,7 +5,7 @@ import * as db from '../lib/db'
 import { addQueueToUser, addQueueToSocket } from '../lib/provider'
 import { getRooms, getUsersInRoom } from '../logic/users'
 import { saveMessage, getMessages } from '../logic/messages'
-import { enterRoom } from '../logic/rooms'
+import { enterRoom, creatRoom } from '../logic/rooms'
 import { SendMessage } from '../types'
 
 type ReceiveMessage =
@@ -108,17 +108,12 @@ export async function socket(req: Request) {
       room = await db.collections.rooms.findOne({ _id: new ObjectID(id) })
     } else if (data.name) {
       const name = escape(trim(data.name))
-      const res = await db.collections.rooms.findOneAndUpdate(
-        { name: name },
-        { $set: { name: name } },
-        { upsert: true }
-      )
+      const found = await db.collections.rooms.findOne({ name: name })
 
-      if (res.value) {
-        room = { _id: res.value._id, name: res.value.name }
+      if (found) {
+        room = found
       } else {
-        // 部屋の初回作成時はvalueがnull
-        room = await db.collections.rooms.findOne({ name: name })
+        room = await creatRoom(new ObjectID(user), name)
       }
     }
 
