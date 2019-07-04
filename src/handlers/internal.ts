@@ -112,7 +112,18 @@ export async function socket(req: Request) {
       room = await db.collections.rooms.findOne({ _id: new ObjectID(id) })
     } else if (data.name) {
       const name = escape(trim(data.name))
-      room = await db.collections.rooms.findOne({ name: name })
+      const res = await db.collections.rooms.findOneAndUpdate(
+        { name: name },
+        { $set: { name: name } },
+        { upsert: true }
+      )
+
+      if (res.value) {
+        room = { _id: res.value._id, name: res.value.name }
+      } else {
+        // 部屋の初回作成時はvalueがnull
+        room = await db.collections.rooms.findOne({ name: name })
+      }
     }
 
     // @todo send bad request
