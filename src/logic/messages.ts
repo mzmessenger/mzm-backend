@@ -1,4 +1,5 @@
 import { ObjectID } from 'mongodb'
+import { unescape } from 'validator'
 import { MESSAGE_LIMIT } from '../config'
 import * as db from '../lib/db'
 import { Message } from '../types'
@@ -50,7 +51,7 @@ export async function getMessages(
   for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
     messages.unshift({
       id: doc._id.toHexString(),
-      message: doc.message,
+      message: unescape(doc.message),
       userId: doc.userId.toHexString(),
       createdAt: doc.createdAt,
       userAccount: doc.user[0] ? doc.user[0].account : null

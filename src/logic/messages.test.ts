@@ -85,3 +85,38 @@ test('getMessages', async () => {
   expect(messages.existHistory).toStrictEqual(false)
   expect(messages.messages.length).toStrictEqual(overNum)
 })
+
+test.only('getMessages just', async () => {
+  const userId = new ObjectID()
+  const account = 'test'
+  await db.collections.users.insertOne({ _id: userId, account })
+  const roomId = new ObjectID()
+
+  const insert: db.Message[] = []
+  for (let i = 0; i < MESSAGE_LIMIT * 2; i++) {
+    const message: db.Message = {
+      message: `${i}-message`,
+      roomId,
+      userId,
+      createdAt: new Date()
+    }
+    insert.push(message)
+  }
+
+  await db.collections.messages.insertMany(insert)
+
+  let messages = await getMessages(roomId.toHexString())
+
+  expect(messages.existHistory).toStrictEqual(true)
+  expect(messages.messages.length).toStrictEqual(MESSAGE_LIMIT)
+
+  messages = await getMessages(roomId.toHexString(), messages.messages[0].id)
+
+  expect(messages.existHistory).toStrictEqual(true)
+  expect(messages.messages.length).toStrictEqual(MESSAGE_LIMIT)
+
+  messages = await getMessages(roomId.toHexString(), messages.messages[0].id)
+
+  expect(messages.existHistory).toStrictEqual(false)
+  expect(messages.messages.length).toStrictEqual(0)
+})

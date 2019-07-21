@@ -124,16 +124,12 @@ export async function socket(req: Request) {
 
     await enterRoom(new ObjectID(user), room._id)
 
-    const rooms = await getRooms(user)
-    await Promise.all([
-      addQueueToUser(user, { user, cmd: 'rooms', rooms }),
-      addQueueToSocket(socket, {
-        user,
-        cmd: 'rooms:enter:success',
-        id: room._id.toHexString(),
-        name: room.name
-      })
-    ])
+    await addQueueToSocket(socket, {
+      user,
+      cmd: 'rooms:enter:success',
+      id: room._id.toHexString(),
+      name: room.name
+    })
     return
   }
   return
