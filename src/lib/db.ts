@@ -46,6 +46,7 @@ export async function connect(uri: string = MONGODB_URI) {
     logger.info('[db] connected mongodb')
   }
 
+  // eslint-disable-next-line require-atomic-updates
   connection = client
 
   return client
