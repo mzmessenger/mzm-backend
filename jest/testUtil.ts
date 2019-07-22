@@ -1,45 +1,29 @@
 import assert from 'assert'
 import { MongoClient } from 'mongodb'
+import { MongoMemoryServer } from 'mongodb-memory-server'
 
 export function getMockType(arg) {
   return <jest.Mock<typeof arg>>arg
 }
 
-let connection: MongoClient = null
+export async function mongoSetup() {
+  const mongoServer = new MongoMemoryServer()
+  const uri = await mongoServer.getConnectionString()
+  return { uri, mongoServer }
+}
 
-export async function getDbConnection() {
+export async function getDbConnection(uri: string) {
   assert.strictEqual(process.env.NODE_ENV, 'test')
 
-  if (connection) {
-    return connection
-  }
-
-  const client = await MongoClient.connect(process.env.MONGODB_TEST_URI, {
+  const client = await MongoClient.connect(uri, {
     useNewUrlParser: true
   })
-
-  connection = client
 
   return client
 }
 
-export async function tearDown() {
-  await connection.close()
-}
-
-export async function initDb() {
-  const client = await getDbConnection()
-
-  const db = client.db('mzm')
-  const collections = await db.collections()
-  const promises = collections.map(collection => {
-    return collection.drop()
-  })
-  return await Promise.all(promises)
-}
-
-export async function dropCollection(name: string) {
-  const client = await getDbConnection()
+export async function dropCollection(uri: string, name: string) {
+  const client = await getDbConnection(uri)
   const db = client.db('mzm')
 
   const collections = (await db.collections()).map(c => c.collectionName)

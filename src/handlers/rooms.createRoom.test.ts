@@ -2,16 +2,22 @@ jest.mock('../lib/logger')
 
 import { Request } from 'express'
 import { ObjectID } from 'mongodb'
+import { mongoSetup } from '../../jest/testUtil'
 import * as db from '../lib/db'
 import { BadRequest } from '../lib/errors'
 import { createRoom } from './rooms'
 
+let mongoServer = null
+
 beforeAll(async () => {
-  await db.connect()
+  const mongo = await mongoSetup()
+  mongoServer = mongo.mongoServer
+  return await db.connect(mongo.uri)
 })
 
 afterAll(async () => {
   await db.close()
+  await mongoServer.stop()
 })
 
 function createRoomRequest(userId: ObjectID, name: string): Request {

@@ -2,9 +2,7 @@ import { config } from 'dotenv'
 config()
 
 export const MONGODB_URI =
-  process.env.NODE_ENV === 'test'
-    ? process.env.MONGODB_TEST_URI
-    : process.env.MONGODB_URI
+  process.env.NODE_ENV === 'test' ? null : process.env.MONGODB_URI
 
 export const API_LISTEN = 3001
 

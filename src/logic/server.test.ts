@@ -1,18 +1,23 @@
 jest.mock('../lib/logger')
 
 import { Request, Response } from 'express'
-
+import { mongoSetup } from '../../jest/testUtil'
 import { errorHandler, checkLogin, init } from './server'
 import * as HttpErrors from '../lib/errors'
 import * as db from '../lib/db'
 import { GENERAL_ROOM_NAME } from '../config'
 
+let mongoServer = null
+
 beforeAll(async () => {
-  return await db.connect()
+  const mongo = await mongoSetup()
+  mongoServer = mongo.mongoServer
+  return await db.connect(mongo.uri)
 })
 
 afterAll(async () => {
-  return await db.close()
+  await db.close()
+  await mongoServer.stop()
 })
 
 test('errorHandler (Internal Server Error)', cb => {

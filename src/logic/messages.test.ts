@@ -1,21 +1,28 @@
 jest.mock('../lib/logger')
 
 import { ObjectID } from 'mongodb'
-import { dropCollection } from '../../jest/testUtil'
+import { mongoSetup, dropCollection } from '../../jest/testUtil'
 import * as db from '../lib/db'
 import { saveMessage, getMessages } from './messages'
 import { MESSAGE_LIMIT } from '../config'
 
+let mongoServer = null
+let mongoUri = null
+
 beforeAll(async () => {
-  return await db.connect()
+  const mongo = await mongoSetup()
+  mongoServer = mongo.mongoServer
+  mongoUri = mongo.uri
+  return await db.connect(mongo.uri)
 })
 
 afterAll(async () => {
   await db.close()
+  await mongoServer.stop()
 })
 
 beforeEach(() => {
-  return dropCollection(db.COLLECTION_NAMES.MESSAGES)
+  return dropCollection(mongoUri, db.COLLECTION_NAMES.MESSAGES)
 })
 
 test('saveMessage', async () => {
@@ -86,7 +93,7 @@ test('getMessages', async () => {
   expect(messages.messages.length).toStrictEqual(overNum)
 })
 
-test.only('getMessages just', async () => {
+test('getMessages just', async () => {
   const userId = new ObjectID()
   const account = 'test'
   await db.collections.users.insertOne({ _id: userId, account })

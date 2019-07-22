@@ -26,12 +26,12 @@ export enum COLLECTION_NAMES {
 
 let connection: MongoClient = null
 
-export async function connect() {
+export async function connect(uri: string = MONGODB_URI) {
   if (connection) {
     return connection
   }
 
-  const client = await MongoClient.connect(MONGODB_URI, {
+  const client = await MongoClient.connect(uri, {
     useNewUrlParser: true
   })
 

@@ -1,15 +1,21 @@
 jest.mock('../lib/logger')
 
 import { ObjectID } from 'mongodb'
+import { mongoSetup } from '../../jest/testUtil'
 import * as db from '../lib/db'
 import { enterRoom } from './rooms'
 
+let mongoServer = null
+
 beforeAll(async () => {
-  return await db.connect()
+  const mongo = await mongoSetup()
+  mongoServer = mongo.mongoServer
+  return await db.connect(mongo.uri)
 })
 
 afterAll(async () => {
   await db.close()
+  await mongoServer.stop()
 })
 
 test('enterRoom', async () => {
