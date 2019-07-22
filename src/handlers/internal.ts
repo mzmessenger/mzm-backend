@@ -1,6 +1,6 @@
 import { Request } from 'express'
 import { ObjectID } from 'mongodb'
-import { escape, trim, isEmpty } from 'validator'
+import { escape, unescape, trim, isEmpty } from 'validator'
 import * as db from '../lib/db'
 import { addQueueToUser, addQueueToSocket } from '../lib/provider'
 import { getRooms, getUsersInRoom } from '../logic/users'
@@ -54,7 +54,7 @@ export async function socket(req: Request) {
         id: saved.insertedId.toHexString(),
         userId: user,
         userAccount: u.account,
-        message: message,
+        message: unescape(message),
         createdAt: new Date(Date.now())
       },
       room: room
