@@ -7,7 +7,9 @@ export type Message = {
   id: string
   userId: string
   message: string
+  updated: boolean
   createdAt: Date
+  updatedAt: Date | null
   userAccount: string
 }
 
@@ -35,4 +37,10 @@ export type SendMessage =
       cmd: 'rooms:enter:success'
       id: string
       name: string
+    }
+  | {
+      user: string
+      cmd: 'message:modify'
+      message: Message
+      room: string
     }

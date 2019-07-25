@@ -57,7 +57,9 @@ test('getMessages', async () => {
       message: `${i}-message`,
       roomId,
       userId,
-      createdAt: new Date()
+      updated: false,
+      createdAt: new Date(),
+      updatedAt: null
     }
     insert.push(message)
   }
@@ -105,7 +107,9 @@ test('getMessages just', async () => {
       message: `${i}-message`,
       roomId,
       userId,
-      createdAt: new Date()
+      updated: false,
+      createdAt: new Date(),
+      updatedAt: null
     }
     insert.push(message)
   }

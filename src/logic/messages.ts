@@ -13,7 +13,9 @@ export async function saveMessage(
     message: message,
     roomId: new ObjectID(roomId),
     userId: new ObjectID(userId),
-    createdAt: new Date()
+    updated: false,
+    createdAt: new Date(),
+    updatedAt: null
   }
   return await db.collections.messages.insertOne(insert)
 }
@@ -53,7 +55,9 @@ export async function getMessages(
       id: doc._id.toHexString(),
       message: unescape(doc.message),
       userId: doc.userId.toHexString(),
+      updated: doc.updated ? doc.updated : false,
       createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt ? doc.updatedAt : null,
       userAccount: doc.user[0] ? doc.user[0].account : null
     })
   }

@@ -46,7 +46,9 @@ export async function sendMessage(user: string, data: Send) {
       userId: user,
       userAccount: u.account,
       message: unescape(message),
-      createdAt: new Date(Date.now())
+      updated: false,
+      createdAt: new Date(Date.now()),
+      updatedAt: null
     },
     room: room
   }
@@ -86,10 +88,36 @@ export async function modifyMessage(user: string, data: ModifyMessage) {
     return
   }
 
+  const updatedAt = new Date()
   await db.collections.messages.updateOne(
     { _id: targetId },
-    { $set: { message: message } }
+    { $set: { message: message, updated: true, updatedAt } }
   )
+
+  const u = await db.collections.users.findOne({
+    _id: new ObjectID(user)
+  })
+  const send: SendMessage = {
+    user: user,
+    cmd: 'message:modify',
+    message: {
+      id: from._id.toHexString(),
+      message: unescape(message),
+      userId: from.userId.toHexString(),
+      userAccount: u.account,
+      updated: true,
+      createdAt: from.createdAt,
+      updatedAt: updatedAt
+    },
+    room: from.roomId.toHexString()
+  }
+  // todo: too heavy
+  const users = await getUsersInRoom(from.roomId.toHexString())
+  for (const [id] of Object.entries(users)) {
+    const user = users[id]
+    send.user = user
+    addQueueToUser(user, send)
+  }
 }
 
 type GetMessages = {

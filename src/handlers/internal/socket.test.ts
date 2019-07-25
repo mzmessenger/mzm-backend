@@ -51,11 +51,15 @@ test('modifyMessage', async () => {
   const userId = new ObjectID()
   const createdAt = new Date()
 
+  await db.collections.users.insertOne({ _id: userId, account: 'test' })
+
   const created = await db.collections.messages.insertOne({
     roomId,
     userId,
+    updated: false,
+    message: 'insert',
     createdAt,
-    message: 'insert'
+    updatedAt: null
   })
 
   await socket.modifyMessage(userId.toHexString(), {
@@ -72,4 +76,6 @@ test('modifyMessage', async () => {
   expect(updated.roomId.toHexString()).toStrictEqual(roomId.toHexString())
   expect(updated.userId.toHexString()).toStrictEqual(userId.toHexString())
   expect(updated.createdAt.getTime()).toStrictEqual(createdAt.getTime())
+  expect(updated.updated).toStrictEqual(true)
+  expect(updated.updatedAt).not.toBeNull()
 })

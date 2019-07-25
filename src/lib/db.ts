@@ -82,5 +82,7 @@ export type Message = {
   message: string
   roomId: ObjectId
   userId: ObjectId
+  updated: boolean
   createdAt: Date
+  updatedAt: Date
 }
