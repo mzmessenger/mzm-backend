@@ -1,5 +1,6 @@
 import assert from 'assert'
-import { MongoClient } from 'mongodb'
+import { Request } from 'express'
+import { MongoClient, ObjectID } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 
 export function getMockType(arg) {
@@ -31,4 +32,35 @@ export async function dropCollection(uri: string, name: string) {
     return Promise.resolve()
   }
   return await db.collection(name).drop()
+}
+
+export function createRequest(
+  userId: ObjectID,
+  { params, query, body }: { params?: any; query?: any; body?: any }
+): Request {
+  const req = {
+    headers: {
+      'x-user-id': userId.toHexString()
+    },
+    query: {},
+    params: {},
+    param: function(name: string) {
+      return this.params[name]
+    },
+    body: {}
+  }
+
+  if (params) {
+    req.params = params
+  }
+
+  if (query) {
+    req.query = query
+  }
+
+  if (body) {
+    req.body = body
+  }
+
+  return (req as any) as Request
 }

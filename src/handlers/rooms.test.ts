@@ -1,13 +1,12 @@
 jest.mock('../lib/logger')
 
-import { Request } from 'express'
 import { ObjectID } from 'mongodb'
-import { mongoSetup } from '../../jest/testUtil'
-import { GENERAL_ROOM_NAME } from '../config'
+import { mongoSetup, createRequest } from '../../jest/testUtil'
+import { GENERAL_ROOM_NAME, USER_LIMIT } from '../config'
 import * as db from '../lib/db'
 import { init } from '../logic/server'
 import { BadRequest } from '../lib/errors'
-import { exitRoom } from './rooms'
+import { exitRoom, getUsers } from './rooms'
 
 let mongoServer = null
 
@@ -21,19 +20,6 @@ afterAll(async () => {
   await db.close()
   await mongoServer.stop()
 })
-
-function exitRoomRequest(userId: ObjectID, roomId: string): Request {
-  const req = {
-    headers: {
-      'x-user-id': userId.toHexString()
-    },
-    body: {
-      room: roomId
-    }
-  }
-
-  return (req as any) as Request
-}
 
 test('exitRoom fail (general)', async () => {
   // create general
@@ -50,7 +36,8 @@ test('exitRoom fail (general)', async () => {
     roomId: general._id
   })
 
-  const req = exitRoomRequest(userId, general._id.toHexString())
+  const body = { room: general._id.toHexString() }
+  const req = createRequest(userId, { body })
 
   try {
     await exitRoom(req)
@@ -62,11 +49,70 @@ test('exitRoom fail (general)', async () => {
 test.each([[null, '']])('exitRoom BadRequest (%s)', async arg => {
   expect.assertions(1)
 
-  const req = exitRoomRequest(new ObjectID(), arg)
+  const body = { room: arg }
+  const req = createRequest(new ObjectID(), { body })
 
   try {
-    await exitRoom((req as any) as Request)
+    await exitRoom(req)
   } catch (e) {
     expect(e instanceof BadRequest).toStrictEqual(true)
   }
+})
+
+test.only('getUsers', async () => {
+  const userId = new ObjectID()
+  const roomId = new ObjectID()
+
+  const overNum = 4
+
+  const users: db.User[] = []
+  const insert: db.Enter[] = []
+  for (let i = 0; i < USER_LIMIT + overNum; i++) {
+    const userId = new ObjectID()
+    const user: db.User = { _id: userId, account: `account-${i}` }
+    const enter: db.Enter = { roomId, userId }
+    insert.push(enter)
+    // 削除済みユーザーのテストのため歯抜けにする
+    if (i % 2 === 0) {
+      users.push(user)
+    }
+  }
+  await Promise.all([
+    db.collections.enter.insertMany(insert),
+    db.collections.users.insertMany(users)
+  ])
+
+  const userIds = users.map(u => u._id)
+  const userMap = (await db.collections.users
+    .find({ _id: { $in: userIds } })
+    .toArray()).reduce((map, current) => {
+    map.set(current._id.toHexString(), current)
+    return map
+  }, new Map<string, db.User>())
+
+  const params = { roomid: roomId.toHexString() }
+  let req = createRequest(userId, { params })
+
+  let res = await getUsers(req)
+
+  expect(res.count).toStrictEqual(USER_LIMIT + overNum)
+  expect(res.users.length).toStrictEqual(USER_LIMIT)
+
+  for (const user of res.users) {
+    const dbUser = userMap.get(user.userId)
+    if (dbUser) {
+      expect(user.userId).toStrictEqual(dbUser._id.toHexString())
+      expect(user.account).toStrictEqual(dbUser.account)
+    } else {
+      expect(user.account).toStrictEqual('removed')
+    }
+  }
+
+  // threshold
+  const query = { threshold: res.users[res.users.length - 1].enterId }
+  req = createRequest(userId, { params, query })
+  res = await getUsers(req)
+
+  expect(res.count).toStrictEqual(USER_LIMIT + overNum)
+  expect(res.users.length).toStrictEqual(overNum)
 })

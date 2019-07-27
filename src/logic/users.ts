@@ -60,7 +60,7 @@ export async function getRooms(userId: string): Promise<SendRoom[]> {
   return rooms
 }
 
-export async function getUsersInRoom(roomId: string) {
+export async function getAllUsersInRoom(roomId: string) {
   const cursor = await db.collections.enter.find({
     roomId: new ObjectID(roomId)
   })

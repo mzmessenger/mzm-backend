@@ -4,7 +4,7 @@ import { SendMessage } from '../../types'
 import * as db from '../../lib/db'
 import { addQueueToUser, addQueueToSocket } from '../../lib/provider'
 import { saveMessage, getMessages } from '../../logic/messages'
-import { getUsersInRoom } from '../../logic/users'
+import { getAllUsersInRoom } from '../../logic/users'
 import { creatRoom } from '../../logic/rooms'
 import { enterRoom as logicEnterRoom } from '../../logic/rooms'
 
@@ -54,7 +54,7 @@ export async function sendMessage(user: string, data: Send) {
   }
 
   // todo: too heavy
-  const users = await getUsersInRoom(room)
+  const users = await getAllUsersInRoom(room)
   for (const [id] of Object.entries(users)) {
     const user = users[id]
     send.user = user
@@ -112,7 +112,7 @@ export async function modifyMessage(user: string, data: ModifyMessage) {
     room: from.roomId.toHexString()
   }
   // todo: too heavy
-  const users = await getUsersInRoom(from.roomId.toHexString())
+  const users = await getAllUsersInRoom(from.roomId.toHexString())
   for (const [id] of Object.entries(users)) {
     const user = users[id]
     send.user = user

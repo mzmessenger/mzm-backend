@@ -4,7 +4,8 @@ import { isEmpty } from 'validator'
 import {
   GENERAL_ROOM_NAME,
   BANNED_CHARS_REGEXP_IN_ROOM_NAME,
-  BANNED_UNICODE_REGEXP_IN_ROOM_NAME
+  BANNED_UNICODE_REGEXP_IN_ROOM_NAME,
+  USER_LIMIT
 } from '../config'
 import { BadRequest } from '../lib/errors'
 import { getUserId } from '../lib/utils'
@@ -70,4 +71,64 @@ export async function exitRoom(req: Request) {
     userId: new ObjectID(user),
     roomId
   })
+}
+
+type EnterUser = {
+  userId: string
+  account: string
+  enterId: string
+}
+
+export async function getUsers(
+  req: Request
+): Promise<{ count: number; users: EnterUser[] }> {
+  const room = popParam(req.param('roomid'))
+  if (isEmpty(room)) {
+    throw new BadRequest({ reason: 'room is empty' })
+  }
+
+  const roomId = new ObjectID(room)
+
+  const query: Object[] = [
+    {
+      $match: { roomId }
+    },
+    {
+      $lookup: {
+        from: db.COLLECTION_NAMES.USERS,
+        localField: 'userId',
+        foreignField: '_id',
+        as: 'user'
+      }
+    }
+  ]
+
+  const threshold = popParam(req.query.threshold)
+  if (threshold) {
+    query.push({
+      $match: { _id: { $lt: new ObjectID(threshold) } }
+    })
+  }
+
+  const countQuery = db.collections.enter.countDocuments({ roomId })
+  const enterQuery = db.collections.enter
+    .aggregate<db.Message & { user: db.User[] }>(query)
+    .sort({ _id: -1 })
+    .limit(USER_LIMIT)
+
+  const [count, cursor] = await Promise.all([countQuery, enterQuery])
+
+  const users: EnterUser[] = []
+  for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
+    const user: EnterUser = {
+      userId: doc.userId.toHexString(),
+      account: 'removed',
+      enterId: doc._id.toHexString()
+    }
+    if (doc.user && doc.user[0]) {
+      user.account = doc.user[0].account
+    }
+    users.push(user)
+  }
+  return { count, users }
 }
