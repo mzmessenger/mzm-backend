@@ -1,8 +1,7 @@
 jest.mock('../lib/logger')
 
-import { Request } from 'express'
 import { ObjectID } from 'mongodb'
-import { mongoSetup, dropCollection } from '../../jest/testUtil'
+import { mongoSetup, dropCollection, createRequest } from '../../jest/testUtil'
 import { BadRequest, NotFound } from '../lib/errors'
 import * as db from '../lib/db'
 import { getUserInfo, updateAccount } from './users'
@@ -32,16 +31,10 @@ test('getUserInfo', async () => {
 
   await db.collections.users.insertOne({ _id: userId, account })
 
-  const req = {
-    headers: {
-      'x-user-id': userId.toHexString()
-    },
-    body: {
-      account: account
-    }
-  }
+  const body = { account }
+  const req = createRequest(userId, { body })
 
-  const user = await getUserInfo((req as any) as Request)
+  const user = await getUserInfo(req)
 
   const found = await db.collections.users.findOne({ _id: userId })
 
@@ -57,14 +50,10 @@ test('getUserInfo before signUp', async () => {
 
   await db.collections.users.insertOne({ _id: userId, account })
 
-  const req = {
-    headers: {
-      'x-user-id': userId.toHexString()
-    }
-  }
+  const req = createRequest(userId, {})
 
   try {
-    await getUserInfo((req as any) as Request)
+    await getUserInfo(req)
   } catch (e) {
     expect(e instanceof NotFound).toStrictEqual(true)
   }
@@ -82,17 +71,11 @@ test.each([
 
   const userId = new ObjectID()
 
-  const req = {
-    headers: {
-      'x-user-id': userId.toHexString()
-    },
-    body: {
-      account: account
-    }
-  }
+  const body = { account }
+  const req = createRequest(userId, { body })
 
   try {
-    await updateAccount((req as any) as Request)
+    await updateAccount(req)
   } catch (e) {
     expect(e instanceof BadRequest).toStrictEqual(true)
   }

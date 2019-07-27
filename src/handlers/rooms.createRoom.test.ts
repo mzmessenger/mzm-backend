@@ -1,8 +1,7 @@
 jest.mock('../lib/logger')
 
-import { Request } from 'express'
 import { ObjectID } from 'mongodb'
-import { mongoSetup } from '../../jest/testUtil'
+import { mongoSetup, createRequest } from '../../jest/testUtil'
 import * as db from '../lib/db'
 import { BadRequest } from '../lib/errors'
 import { createRoom } from './rooms'
@@ -20,24 +19,12 @@ afterAll(async () => {
   await mongoServer.stop()
 })
 
-function createRoomRequest(userId: ObjectID, name: string): Request {
-  const req = {
-    headers: {
-      'x-user-id': userId.toHexString()
-    },
-    body: {
-      name: name
-    }
-  }
-
-  return (req as any) as Request
-}
-
 test.each([['aaa', 'aaa'], ['日本語　', '日本語'], ['🍣', '🍣']])(
   'createRoom success (%s, %s)',
   async (name, createdName) => {
     const userId = new ObjectID()
-    const req = createRoomRequest(userId, name)
+    const body = { name }
+    const req = createRequest(userId, { body })
 
     const { id } = await createRoom(req)
 
@@ -58,10 +45,11 @@ test.each([
   expect.assertions(1)
 
   const userId = new ObjectID()
-  const req = createRoomRequest(userId, name)
+  const body = { name }
+  const req = createRequest(userId, { body })
 
   try {
-    await createRoom((req as any) as Request)
+    await createRoom(req)
   } catch (e) {
     expect(e instanceof BadRequest).toStrictEqual(true)
   }
@@ -80,10 +68,11 @@ test.each([
   expect.assertions(1)
 
   const userId = new ObjectID()
-  const req = createRoomRequest(userId, name)
+  const body = { name }
+  const req = createRequest(userId, { body })
 
   try {
-    await createRoom((req as any) as Request)
+    await createRoom(req)
   } catch (e) {
     expect(e instanceof BadRequest).toStrictEqual(true)
   }

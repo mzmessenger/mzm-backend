@@ -2,9 +2,8 @@ jest.mock('../lib/logger')
 jest.mock('../lib/logger')
 jest.mock('./internal/socket')
 
-import { Request } from 'express'
 import { ObjectID } from 'mongodb'
-import { mongoSetup, getMockType } from '../../jest/testUtil'
+import { mongoSetup, getMockType, createRequest } from '../../jest/testUtil'
 import * as db from '../lib/db'
 import { socket } from './internal'
 import * as internalSocket from './internal/socket'
@@ -29,13 +28,8 @@ test.each([
   ['rooms:enter', internalSocket.enterRoom]
 ])('socket %s', async (cmd, called: any) => {
   const userId = new ObjectID()
-
-  const req = ({
-    headers: {
-      'x-user-id': userId.toHexString()
-    },
-    body: { cmd }
-  } as any) as Request
+  const body = { cmd }
+  const req = createRequest(userId, { body })
 
   const calledMock = getMockType(called)
   calledMock.mockClear()

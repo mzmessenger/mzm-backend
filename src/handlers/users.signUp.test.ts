@@ -1,8 +1,7 @@
 jest.mock('../lib/logger')
 
-import { Request } from 'express'
 import { ObjectID } from 'mongodb'
-import { mongoSetup, dropCollection } from '../../jest/testUtil'
+import { mongoSetup, dropCollection, createRequest } from '../../jest/testUtil'
 import { BadRequest } from '../lib/errors'
 import * as db from '../lib/db'
 import { init } from '../logic/server'
@@ -34,16 +33,10 @@ test('signUp success', async () => {
   // create general room
   await init()
 
-  const req = {
-    headers: {
-      'x-user-id': userId.toHexString()
-    },
-    body: {
-      account: account
-    }
-  }
+  const body = { account }
+  const req = createRequest(userId, { body })
 
-  await signUp((req as any) as Request)
+  await signUp(req)
 })
 
 test('signUp already exist', async () => {
@@ -54,17 +47,11 @@ test('signUp already exist', async () => {
 
   await db.collections.users.insertOne({ _id: created, account: account })
 
-  const req = {
-    headers: {
-      'x-user-id': new ObjectID()
-    },
-    body: {
-      account: account
-    }
-  }
+  const body = { account }
+  const req = createRequest(new ObjectID(), { body })
 
   try {
-    await signUp((req as any) as Request)
+    await signUp(req)
   } catch (e) {
     expect(e instanceof BadRequest).toStrictEqual(true)
   }
@@ -80,17 +67,11 @@ test.each([
 
   const userId = new ObjectID()
 
-  const req = {
-    headers: {
-      'x-user-id': userId.toHexString()
-    },
-    body: {
-      account: account
-    }
-  }
+  const body = { account }
+  const req = createRequest(userId, { body })
 
   try {
-    await signUp((req as any) as Request)
+    await signUp(req)
   } catch (e) {
     expect(e instanceof BadRequest).toStrictEqual(true)
   }
