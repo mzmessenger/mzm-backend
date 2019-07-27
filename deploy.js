@@ -38,8 +38,8 @@ async function deploy({ config, remote, local }) {
     }
   )
 
-  await remote(`cd ${tmpDir} && sudo npm install --production`)
   await remote(`sudo rsync -av --exclude='.env' ${tmpDir}/ ${target}/`)
+  await remote(`cd ${target} && sudo npm install --production`)
   await remote(`sudo rm -rf ${tmpDir}`)
   await remote(`sudo systemctl restart mzm-backend`)
 }
