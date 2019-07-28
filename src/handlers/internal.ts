@@ -1,5 +1,4 @@
 import { Request } from 'express'
-import { addQueueToSocket } from '../lib/provider'
 import { getRooms } from '../logic/users'
 import { SendMessage } from '../types'
 import {
@@ -23,7 +22,7 @@ export async function socket(req: Request) {
   } else if (data.cmd === 'rooms:get') {
     const rooms = await getRooms(user)
     const room: SendMessage = { user: user, cmd: 'rooms', rooms }
-    return await addQueueToSocket(socket, room)
+    return room
   } else if (data.cmd === 'rooms:enter') {
     return await enterRoom(user, socket, data)
   }

@@ -44,9 +44,6 @@ export function createRequest(
     },
     query: {},
     params: {},
-    param: function(name: string) {
-      return this.params[name]
-    },
     body: {}
   }
 

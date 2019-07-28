@@ -6,7 +6,7 @@ import { getMockType } from '../../jest/testUtil'
 const xadd = getMockType(redis.xadd)
 
 import { SendMessage } from '../types'
-import { addQueueToUser, addQueueToSocket } from './provider'
+import { addQueueToUser } from './provider'
 
 test('addQueueToUser ', async () => {
   xadd.mockClear()
@@ -25,26 +25,4 @@ test('addQueueToUser ', async () => {
 
   const [, , , queueStr] = xadd.mock.calls[0]
   expect(queueStr).toEqual(JSON.stringify(queue))
-})
-
-test('addQueueToSocket ', async () => {
-  xadd.mockClear()
-
-  const socket = '5cc9d148139370d11b706624'
-
-  const queue: SendMessage = {
-    user: 'aaaa',
-    cmd: 'rooms',
-    rooms: []
-  }
-
-  await addQueueToSocket(socket, queue)
-
-  expect(xadd.mock.calls.length).toBe(1)
-
-  const [, , , queueStr] = xadd.mock.calls[0]
-
-  // user が削除されて socket の id が入れられている
-  delete queue.user
-  expect(queueStr).toEqual(JSON.stringify({ ...queue, socket }))
 })

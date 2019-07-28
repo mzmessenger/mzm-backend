@@ -82,7 +82,7 @@ type EnterUser = {
 export async function getUsers(
   req: Request
 ): Promise<{ count: number; users: EnterUser[] }> {
-  const room = popParam(req.param('roomid'))
+  const room = popParam(req.params.roomid)
   if (isEmpty(room)) {
     throw new BadRequest({ reason: 'room is empty' })
   }

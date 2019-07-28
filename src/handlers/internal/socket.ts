@@ -2,7 +2,7 @@ import { ObjectID } from 'mongodb'
 import { escape, unescape, trim, isEmpty } from 'validator'
 import { SendMessage } from '../../types'
 import * as db from '../../lib/db'
-import { addQueueToUser, addQueueToSocket } from '../../lib/provider'
+import { addQueueToUser } from '../../lib/provider'
 import { saveMessage, getMessages } from '../../logic/messages'
 import { getAllUsersInRoom } from '../../logic/users'
 import { creatRoom } from '../../logic/rooms'
@@ -157,7 +157,7 @@ export async function getMessagesFromRoom(
     messages: messages,
     existHistory
   }
-  return await addQueueToSocket(socketId, send)
+  return send
 }
 
 type EnterRoom = {
@@ -193,11 +193,10 @@ export async function enterRoom(
 
   await logicEnterRoom(new ObjectID(user), room._id)
 
-  await addQueueToSocket(socketId, {
+  return {
     user,
     cmd: 'rooms:enter:success',
     id: room._id.toHexString(),
     name: room.name
-  })
-  return
+  }
 }
