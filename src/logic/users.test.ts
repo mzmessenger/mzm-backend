@@ -5,7 +5,7 @@ import { mongoSetup } from '../../jest/testUtil'
 import { GENERAL_ROOM_NAME } from '../config'
 import * as db from '../lib/db'
 import { init } from './server'
-import { isValidAccount, initUser } from './users'
+import { isValidAccount, initUser, getAllUserIdsInRoom } from './users'
 
 let mongoServer = null
 
@@ -65,4 +65,25 @@ test('initUser', async () => {
   // general にだけ入室している
   expect(foundRooms.length).toStrictEqual(1)
   expect(foundRooms[0].room[0].name).toStrictEqual(GENERAL_ROOM_NAME)
+})
+
+test('getAllUserIdsInRoom', async () => {
+  const roomId = new ObjectID()
+  const users = [new ObjectID(), new ObjectID(), new ObjectID()]
+  const userIdStrs = users.map(user => user.toHexString())
+  const enter: db.Enter[] = users.map(user => {
+    return {
+      roomId: roomId,
+      userId: user
+    }
+  })
+
+  await db.collections.enter.insertMany(enter)
+
+  const ids = await getAllUserIdsInRoom(roomId.toHexString())
+
+  expect(ids.length).toStrictEqual(users.length)
+  for (const id of ids) {
+    expect(userIdStrs.includes(id)).toStrictEqual(true)
+  }
 })

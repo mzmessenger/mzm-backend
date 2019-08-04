@@ -6,23 +6,23 @@ import { getMockType } from '../../jest/testUtil'
 const xadd = getMockType(redis.xadd)
 
 import { SendMessage } from '../types'
-import { addQueueToUser } from './provider'
+import { addQueueToUsers } from './provider'
 
-test('addQueueToUser ', async () => {
+test('addQueueToUsers', async () => {
   xadd.mockClear()
 
-  const user = '5cc9d148139370d11b706624'
+  const users = ['5cc9d148139370d11b706624']
 
   const queue: SendMessage = {
-    user: user,
+    user: null,
     cmd: 'rooms',
     rooms: []
   }
 
-  await addQueueToUser(user, queue)
+  await addQueueToUsers(users, queue)
 
   expect(xadd.mock.calls.length).toBe(1)
 
-  const [, , , queueStr] = xadd.mock.calls[0]
-  expect(queueStr).toEqual(JSON.stringify(queue))
+  const [, , , , , queueStr] = xadd.mock.calls[0]
+  expect(queueStr).toEqual(JSON.stringify({ ...queue, user: users[0] }))
 })

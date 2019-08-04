@@ -60,16 +60,14 @@ export async function getRooms(userId: string): Promise<SendRoom[]> {
   return rooms
 }
 
-export async function getAllUsersInRoom(roomId: string) {
+export async function getAllUserIdsInRoom(roomId: string) {
   const cursor = await db.collections.enter.find({
     roomId: new ObjectID(roomId)
   })
 
-  const users: { [key: string]: string } = {}
+  const userIds: string[] = []
   for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
-    const enter: db.Enter = doc
-    const id = enter.userId.toHexString()
-    users[id] = id
+    userIds.push(doc.userId.toHexString())
   }
-  return users
+  return userIds
 }
