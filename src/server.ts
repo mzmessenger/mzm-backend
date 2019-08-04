@@ -15,7 +15,7 @@ import { consume } from './lib/consumer'
 
 const app = express()
 
-const jsonParser = bodyParser.json()
+const jsonParser = bodyParser.json({ limit: '1mb' })
 
 app.post('/api/rooms', checkLogin, jsonParser, wrap(rooms.createRoom))
 app.post('/api/rooms/enter', checkLogin, jsonParser, wrap(rooms.enterRoom))
