@@ -9,7 +9,7 @@ export function isValidAccount(account: string): boolean {
   if (isEmpty(account, { ignore_whitespace: true })) {
     return false
   }
-  return /^[a-zA-Z\d]+$/.test(account)
+  return /^[a-zA-Z\d_-]+$/.test(account)
 }
 
 async function enterGeneral(userId: ObjectID) {

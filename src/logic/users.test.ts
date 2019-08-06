@@ -22,13 +22,15 @@ afterAll(async () => {
 
 test.each([
   ['valid1234', true],
+  ['valid_1234', true],
+  ['a-ho-ge', true],
   ['  aaaa', false],
   ['a@hoge', false],
-  ['a-ho-ge', false],
-  ['&amp;aa%&gt;&lt;', false]
-])('popAccount (%s)', (arg: string, answer) => {
-  const pop = isValidAccount(arg)
-  expect(pop).toStrictEqual(answer)
+  ['&amp;aa%&gt;&lt;', false],
+  ['@hoge', false]
+])('isValidAccount (%s)', (arg: string, answer) => {
+  const isValid = isValidAccount(arg)
+  expect(isValid).toStrictEqual(answer)
 })
 
 test('initUser', async () => {
