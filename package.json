@@ -4,13 +4,13 @@
   "version": "0.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node src/server.ts | bunyan",
-    "prebuild": "npm run lint",
+    "prestart": "npm run build",
+    "start": "node dist/src/server.js | bunyan",
     "cleanup": "rm -rf dist/",
     "build": "tsc -p tsconfig.json",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint --ext .ts,.js src",
-    "pretest": "npm run build",
+    "pretest": "npm run lint && npm run build",
     "jest": "jest",
     "test": "jest"
   },
