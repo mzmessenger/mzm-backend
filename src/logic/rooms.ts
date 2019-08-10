@@ -16,8 +16,7 @@ export async function initGeneral() {
 export async function enterRoom(userId: ObjectID, roomId: ObjectID) {
   const enter: db.Enter = {
     userId: userId,
-    roomId: roomId,
-    unreadCounter: 0
+    roomId: roomId
   }
   return await db.collections.enter.findOneAndUpdate(
     { userId: userId, roomId: roomId },

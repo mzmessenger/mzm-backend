@@ -1,6 +1,7 @@
 export type Room = {
   id: string
   name: string
+  unread: number
 }
 
 export type Message = {

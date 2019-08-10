@@ -52,7 +52,11 @@ export async function getRooms(userId: string): Promise<SendRoom[]> {
   const rooms: SendRoom[] = []
   for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
     const room = doc.room[0]
-    rooms.push({ id: room._id.toHexString(), name: room.name })
+    rooms.push({
+      id: room._id.toHexString(),
+      name: room.name,
+      unread: doc.unreadCounter ? doc.unreadCounter : 0
+    })
   }
   return rooms
 }
