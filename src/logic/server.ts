@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express'
 import logger from '../lib/logger'
 import * as HttpErrors from '../lib/errors'
 import * as db from '../lib/db'
+import { initRemoveConsumerGroup } from '../lib/consumer/remove'
 import { GENERAL_ROOM_NAME } from '../config'
 
 const allHttpErrors = Object.keys(HttpErrors).map(err => HttpErrors[err])
@@ -29,4 +30,6 @@ export async function init() {
     { $set: { name: GENERAL_ROOM_NAME, createdBy: 'system' } },
     { upsert: true }
   )
+
+  await initRemoveConsumerGroup()
 }
