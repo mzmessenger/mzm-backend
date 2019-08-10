@@ -1,11 +1,13 @@
 jest.mock('../../lib/logger')
 jest.mock('../../logic/messages')
+jest.mock('../../lib/provider')
 
 import { ObjectID } from 'mongodb'
 import { mongoSetup, getMockType } from '../../../jest/testUtil'
 import * as db from '../../lib/db'
 import * as socket from './socket'
 import * as logicMessages from '../../logic/messages'
+import { addQueueToUsers, addUnreadQueue } from '../../lib/provider'
 
 let mongoServer = null
 
@@ -31,6 +33,12 @@ test('sendMessage', async () => {
   const insertedIdMock = new ObjectID()
   const saveMessageMock = getMockType(logicMessages.saveMessage)
   saveMessageMock.mockResolvedValueOnce({ insertedId: insertedIdMock })
+  const addQueueToUsersMock = getMockType(addQueueToUsers)
+  addQueueToUsersMock.mockClear()
+  addQueueToUsersMock.mockResolvedValue('resolve')
+  const addUnreadQueueMock = getMockType(addUnreadQueue)
+  addUnreadQueueMock.mockClear()
+  addUnreadQueueMock.mockResolvedValue('resolve')
 
   await socket.sendMessage(userId.toHexString(), {
     cmd: 'message:send',
@@ -44,6 +52,9 @@ test('sendMessage', async () => {
   expect(args[0]).toStrictEqual(message)
   expect(args[1]).toStrictEqual(roomId.toHexString())
   expect(args[2]).toStrictEqual(userId.toHexString())
+
+  expect(addUnreadQueueMock.mock.calls.length).toStrictEqual(1)
+  expect(addQueueToUsersMock.mock.calls.length).toStrictEqual(1)
 })
 
 test('modifyMessage', async () => {
@@ -62,6 +73,10 @@ test('modifyMessage', async () => {
     updatedAt: null
   })
 
+  const addQueueToUsersMock = getMockType(addQueueToUsers)
+  addQueueToUsersMock.mockClear()
+  addQueueToUsersMock.mockResolvedValue('resolve')
+
   await socket.modifyMessage(userId.toHexString(), {
     cmd: 'message:modify',
     id: created.insertedId.toHexString(),
@@ -78,4 +93,6 @@ test('modifyMessage', async () => {
   expect(updated.createdAt.getTime()).toStrictEqual(createdAt.getTime())
   expect(updated.updated).toStrictEqual(true)
   expect(updated.updatedAt).not.toBeNull()
+
+  expect(addQueueToUsersMock.mock.calls.length).toStrictEqual(1)
 })

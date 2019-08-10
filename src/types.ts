@@ -44,3 +44,7 @@ export type SendMessage =
       message: Message
       room: string
     }
+
+export type UnreadQueue = {
+  roomId: string
+}

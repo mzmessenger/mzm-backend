@@ -60,3 +60,5 @@ const unicode = [
 ]
 
 export const BANNED_UNICODE_REGEXP_IN_ROOM_NAME = new RegExp(unicode.join('|'))
+
+export const UNREAD_STREAM = 'stream:unread'

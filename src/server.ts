@@ -11,7 +11,6 @@ import * as rooms from './handlers/rooms'
 import * as user from './handlers/users'
 import * as internal from './handlers/internal'
 import { checkLogin, errorHandler, init } from './logic/server'
-import { consume as removeConsume } from './lib/consumer/remove'
 
 const app = express()
 
@@ -63,8 +62,6 @@ if (cluster.isMaster) {
       server.listen(API_LISTEN, () => {
         logger.info('Listening on', server.address())
       })
-
-      removeConsume()
     } catch (e) {
       redis.emit('error', e)
     }

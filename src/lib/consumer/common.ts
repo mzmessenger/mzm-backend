@@ -1,6 +1,19 @@
 import redis from '../redis'
 import logger from '../logger'
 
+export async function initConsumerGroup(stream: string, groupName: string) {
+  // create consumer group
+  try {
+    await redis.xgroup('setid', stream, groupName, '$')
+  } catch (e) {
+    try {
+      await redis.xgroup('create', stream, groupName, '$')
+    } catch (e) {
+      logger.error(`failed creating xgroup (${stream}, ${groupName}):`, e)
+    }
+  }
+}
+
 export function createParser(
   handler: (id: string, messages: string[]) => Promise<any>
 ) {
@@ -33,7 +46,7 @@ export async function consumeGroup(
       groupName,
       consumerName,
       'BLOCK',
-      '1000',
+      '100',
       'COUNT',
       '100',
       'STREAMS',

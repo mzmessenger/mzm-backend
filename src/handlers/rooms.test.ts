@@ -4,7 +4,7 @@ import { ObjectID } from 'mongodb'
 import { mongoSetup, createRequest } from '../../jest/testUtil'
 import { GENERAL_ROOM_NAME, USER_LIMIT } from '../config'
 import * as db from '../lib/db'
-import { init } from '../logic/server'
+import { initGeneral } from '../logic/rooms'
 import { BadRequest } from '../lib/errors'
 import { exitRoom, getUsers } from './rooms'
 
@@ -22,8 +22,7 @@ afterAll(async () => {
 })
 
 test('exitRoom fail (general)', async () => {
-  // create general
-  await init()
+  await initGeneral()
 
   const userId = new ObjectID()
 
@@ -33,7 +32,8 @@ test('exitRoom fail (general)', async () => {
 
   await db.collections.enter.insertOne({
     userId: userId,
-    roomId: general._id
+    roomId: general._id,
+    unreadCounter: 0
   })
 
   const body = { room: general._id.toHexString() }
@@ -59,7 +59,7 @@ test.each([[null, '']])('exitRoom BadRequest (%s)', async arg => {
   }
 })
 
-test.only('getUsers', async () => {
+test('getUsers', async () => {
   const userId = new ObjectID()
   const roomId = new ObjectID()
 
@@ -70,7 +70,7 @@ test.only('getUsers', async () => {
   for (let i = 0; i < USER_LIMIT + overNum; i++) {
     const userId = new ObjectID()
     const user: db.User = { _id: userId, account: `account-${i}` }
-    const enter: db.Enter = { roomId, userId }
+    const enter: db.Enter = { roomId, userId, unreadCounter: 0 }
     insert.push(enter)
     // 削除済みユーザーのテストのため歯抜けにする
     if (i % 2 === 0) {

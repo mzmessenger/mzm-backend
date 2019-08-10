@@ -66,6 +66,7 @@ export type Enter = {
   _id?: ObjectId
   roomId: ObjectId
   userId: ObjectId
+  unreadCounter?: number
 }
 
 export type User = {
@@ -73,8 +74,11 @@ export type User = {
   account: string
 }
 
-export type Removed = User & {
+export type Removed = {
+  id?: ObjectId
+  account: string
   originId: ObjectId
+  enter: ObjectId[]
 }
 
 export type Message = {

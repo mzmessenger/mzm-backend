@@ -1,11 +1,23 @@
 import { ObjectID } from 'mongodb'
 import * as db from '../lib/db'
 import logger from '../lib/logger'
+import { GENERAL_ROOM_NAME } from '../config'
+
+export async function initGeneral() {
+  await db.collections.rooms.updateOne(
+    {
+      name: GENERAL_ROOM_NAME
+    },
+    { $set: { name: GENERAL_ROOM_NAME, createdBy: 'system' } },
+    { upsert: true }
+  )
+}
 
 export async function enterRoom(userId: ObjectID, roomId: ObjectID) {
   const enter: db.Enter = {
     userId: userId,
-    roomId: roomId
+    roomId: roomId,
+    unreadCounter: 0
   }
   return await db.collections.enter.findOneAndUpdate(
     { userId: userId, roomId: roomId },

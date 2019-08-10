@@ -4,7 +4,7 @@ import { ObjectID } from 'mongodb'
 import { mongoSetup, dropCollection, createRequest } from '../../jest/testUtil'
 import { BadRequest } from '../lib/errors'
 import * as db from '../lib/db'
-import { init } from '../logic/server'
+import { initGeneral } from '../logic/rooms'
 import { signUp } from './users'
 
 let mongoServer = null
@@ -30,8 +30,7 @@ test('signUp success', async () => {
   const userId = new ObjectID()
   const account = 'aaa'
 
-  // create general room
-  await init()
+  await initGeneral()
 
   const body = { account }
   const req = createRequest(userId, { body })

@@ -2,7 +2,7 @@ import { ObjectID } from 'mongodb'
 import { escape, unescape, trim, isEmpty } from 'validator'
 import { SendMessage } from '../../types'
 import * as db from '../../lib/db'
-import { addQueueToUsers } from '../../lib/provider'
+import { addQueueToUsers, addUnreadQueue } from '../../lib/provider'
 import { saveMessage, getMessages } from '../../logic/messages'
 import { getAllUserIdsInRoom } from '../../logic/users'
 import { creatRoom } from '../../logic/rooms'
@@ -52,6 +52,8 @@ export async function sendMessage(user: string, data: Send) {
     },
     room: room
   }
+
+  await addUnreadQueue(room)
 
   const users = await getAllUserIdsInRoom(room)
   addQueueToUsers(users, send)

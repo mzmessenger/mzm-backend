@@ -4,6 +4,7 @@ import { GENERAL_ROOM_NAME } from '../config'
 import { Room as SendRoom } from '../types'
 import logger from '../lib/logger'
 import * as db from '../lib/db'
+import { enterRoom } from './rooms'
 
 export function isValidAccount(account: string): boolean {
   if (isEmpty(account, { ignore_whitespace: true })) {
@@ -21,11 +22,7 @@ async function enterGeneral(userId: ObjectID) {
     roomId: general._id
   })
   if (!existGeneral) {
-    const enter: db.Enter = {
-      userId: userId,
-      roomId: general._id
-    }
-    await db.collections.enter.insertOne(enter)
+    await enterRoom(userId, general._id)
   }
 }
 

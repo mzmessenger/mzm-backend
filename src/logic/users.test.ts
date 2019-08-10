@@ -4,7 +4,7 @@ import { ObjectID } from 'mongodb'
 import { mongoSetup } from '../../jest/testUtil'
 import { GENERAL_ROOM_NAME } from '../config'
 import * as db from '../lib/db'
-import { init } from './server'
+import { initGeneral } from './rooms'
 import { isValidAccount, initUser, getAllUserIdsInRoom } from './users'
 
 let mongoServer = null
@@ -34,8 +34,7 @@ test.each([
 })
 
 test('initUser', async () => {
-  // create general room
-  await init()
+  await initGeneral()
 
   const userId = new ObjectID()
   const account = 'aaa'

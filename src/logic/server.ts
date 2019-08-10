@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express'
 import logger from '../lib/logger'
 import * as HttpErrors from '../lib/errors'
-import * as db from '../lib/db'
-import { initRemoveConsumerGroup } from '../lib/consumer/remove'
-import { GENERAL_ROOM_NAME } from '../config'
+import { initRemoveConsumerGroup, consumeRemove } from '../lib/consumer/remove'
+import { initUnreadConsumerGroup, consumeUnread } from '../lib/consumer/unread'
+import { initGeneral } from './rooms'
 
 const allHttpErrors = Object.keys(HttpErrors).map(err => HttpErrors[err])
 
@@ -23,13 +23,9 @@ export function checkLogin(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function init() {
-  await db.collections.rooms.updateOne(
-    {
-      name: GENERAL_ROOM_NAME
-    },
-    { $set: { name: GENERAL_ROOM_NAME, createdBy: 'system' } },
-    { upsert: true }
-  )
-
+  await initGeneral()
   await initRemoveConsumerGroup()
+  await initUnreadConsumerGroup()
+  consumeRemove()
+  consumeUnread()
 }
