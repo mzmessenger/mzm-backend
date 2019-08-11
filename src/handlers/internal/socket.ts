@@ -2,7 +2,11 @@ import { ObjectID } from 'mongodb'
 import { escape, unescape, trim, isEmpty } from 'validator'
 import { SendMessage } from '../../types'
 import * as db from '../../lib/db'
-import { addQueueToUsers, addUnreadQueue } from '../../lib/provider'
+import {
+  addMessageQueue,
+  addQueueToUsers,
+  addUnreadQueue
+} from '../../lib/provider'
 import { saveMessage, getMessages } from '../../logic/messages'
 import { getAllUserIdsInRoom } from '../../logic/users'
 import { creatRoom } from '../../logic/rooms'
@@ -20,6 +24,7 @@ export type ReceiveMessage =
   | ModifyMessage
   | GetMessages
   | EnterRoom
+  | ReadMessage
 
 type Send = {
   cmd: 'message:send'
@@ -118,11 +123,7 @@ type GetMessages = {
   id?: string
 }
 
-export async function getMessagesFromRoom(
-  user: string,
-  socketId: string,
-  data: GetMessages
-) {
+export async function getMessagesFromRoom(user: string, data: GetMessages) {
   const room = escape(trim(data.room))
   // todo: send bad request
   if (isEmpty(room)) {
@@ -158,11 +159,7 @@ type EnterRoom = {
   name?: string
 }
 
-export async function enterRoom(
-  user: string,
-  socketId: string,
-  data: EnterRoom
-) {
+export async function enterRoom(user: string, data: EnterRoom) {
   let room: db.Room = null
   if (data.id) {
     const id = escape(trim(data.id))
@@ -191,4 +188,21 @@ export async function enterRoom(
     id: room._id.toHexString(),
     name: room.name
   }
+}
+
+type ReadMessage = {
+  cmd: 'rooms:read'
+  room: string
+}
+
+export async function readMessage(user: string, data: ReadMessage) {
+  await db.collections.enter.updateOne(
+    {
+      userId: new ObjectID(user),
+      roomId: new ObjectID(data.room)
+    },
+    { $set: { unreadCounter: 0 } }
+  )
+
+  await addMessageQueue({ user, cmd: 'rooms:read', room: data.room })
 }

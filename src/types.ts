@@ -45,6 +45,11 @@ export type SendMessage =
       message: Message
       room: string
     }
+  | {
+      user: string
+      cmd: 'rooms:read'
+      room: string
+    }
 
 export type UnreadQueue = {
   roomId: string

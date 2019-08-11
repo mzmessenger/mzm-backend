@@ -6,25 +6,27 @@ import {
   sendMessage,
   modifyMessage,
   getMessagesFromRoom,
-  enterRoom
+  enterRoom,
+  readMessage
 } from './internal/socket'
 
 export async function socket(req: Request) {
   const user: string = req.headers['x-user-id'] as string
-  const socket: string = req.headers['x-socket-id'] as string
   const data = req.body as ReceiveMessage
   if (data.cmd === 'message:send') {
     return await sendMessage(user, data)
   } else if (data.cmd === 'message:modify') {
     return await modifyMessage(user, data)
   } else if (data.cmd === 'messages:room') {
-    return await getMessagesFromRoom(user, socket, data)
+    return await getMessagesFromRoom(user, data)
   } else if (data.cmd === 'rooms:get') {
     const rooms = await getRooms(user)
     const room: SendMessage = { user: user, cmd: 'rooms', rooms }
     return room
   } else if (data.cmd === 'rooms:enter') {
-    return await enterRoom(user, socket, data)
+    return await enterRoom(user, data)
+  } else if (data.cmd === 'rooms:read') {
+    return await readMessage(user, data)
   }
   return
 }

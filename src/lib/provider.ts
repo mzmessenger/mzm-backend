@@ -3,8 +3,8 @@ import logger from './logger'
 import { SendMessage, UnreadQueue } from '../types'
 import { UNREAD_STREAM } from '../config'
 
-async function addQueueToUser(user: string, data: SendMessage) {
-  const message = JSON.stringify({ ...data, user })
+export async function addMessageQueue(data: SendMessage) {
+  const message = JSON.stringify(data)
   await redis.xadd(
     'stream:socket:message',
     'MAXLEN',
@@ -18,7 +18,7 @@ async function addQueueToUser(user: string, data: SendMessage) {
 
 export async function addQueueToUsers(users: string[], data: SendMessage) {
   // todo: too heavy
-  const promises = users.map(user => addQueueToUser(user, data))
+  const promises = users.map(user => addMessageQueue({ ...data, user }))
   await Promise.all(promises)
 }
 

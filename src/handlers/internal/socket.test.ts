@@ -7,7 +7,11 @@ import { mongoSetup, getMockType } from '../../../jest/testUtil'
 import * as db from '../../lib/db'
 import * as socket from './socket'
 import * as logicMessages from '../../logic/messages'
-import { addQueueToUsers, addUnreadQueue } from '../../lib/provider'
+import {
+  addMessageQueue,
+  addQueueToUsers,
+  addUnreadQueue
+} from '../../lib/provider'
 
 let mongoServer = null
 
@@ -35,10 +39,8 @@ test('sendMessage', async () => {
   saveMessageMock.mockResolvedValueOnce({ insertedId: insertedIdMock })
   const addQueueToUsersMock = getMockType(addQueueToUsers)
   addQueueToUsersMock.mockClear()
-  addQueueToUsersMock.mockResolvedValue('resolve')
   const addUnreadQueueMock = getMockType(addUnreadQueue)
   addUnreadQueueMock.mockClear()
-  addUnreadQueueMock.mockResolvedValue('resolve')
 
   await socket.sendMessage(userId.toHexString(), {
     cmd: 'message:send',
@@ -62,9 +64,9 @@ test('modifyMessage', async () => {
   const userId = new ObjectID()
   const createdAt = new Date()
 
-  await db.collections.users.insertOne({ _id: userId, account: 'test' })
+  const user = db.collections.users.insertOne({ _id: userId, account: 'test' })
 
-  const created = await db.collections.messages.insertOne({
+  const message = db.collections.messages.insertOne({
     roomId,
     userId,
     updated: false,
@@ -73,9 +75,10 @@ test('modifyMessage', async () => {
     updatedAt: null
   })
 
+  const [created] = await Promise.all([message, user])
+
   const addQueueToUsersMock = getMockType(addQueueToUsers)
   addQueueToUsersMock.mockClear()
-  addQueueToUsersMock.mockResolvedValue('resolve')
 
   await socket.modifyMessage(userId.toHexString(), {
     cmd: 'message:modify',
@@ -95,4 +98,28 @@ test('modifyMessage', async () => {
   expect(updated.updatedAt).not.toBeNull()
 
   expect(addQueueToUsersMock.mock.calls.length).toStrictEqual(1)
+})
+
+test('readMessage', async () => {
+  const roomId = new ObjectID()
+  const userId = new ObjectID()
+
+  await Promise.all([
+    db.collections.users.insertOne({ _id: userId, account: 'test' }),
+    db.collections.enter.insertOne({ userId, roomId, unreadCounter: 10 })
+  ])
+
+  const addMessageQueueMock = getMockType(addMessageQueue)
+  addMessageQueueMock.mockClear()
+
+  await socket.readMessage(userId.toHexString(), {
+    cmd: 'rooms:read',
+    room: roomId.toHexString()
+  })
+
+  const updated = await db.collections.enter.findOne({ userId, roomId })
+
+  expect(updated.unreadCounter).toStrictEqual(0)
+
+  expect(addMessageQueueMock.mock.calls.length).toStrictEqual(1)
 })

@@ -3,29 +3,16 @@ jest.mock('../lib/logger')
 jest.mock('./internal/socket')
 
 import { ObjectID } from 'mongodb'
-import { mongoSetup, getMockType, createRequest } from '../../jest/testUtil'
-import * as db from '../lib/db'
+import { getMockType, createRequest } from '../../jest/testUtil'
 import { socket } from './internal'
 import * as internalSocket from './internal/socket'
-
-let mongoServer = null
-
-beforeAll(async () => {
-  const mongo = await mongoSetup()
-  mongoServer = mongo.mongoServer
-  return await db.connect(mongo.uri)
-})
-
-afterAll(async () => {
-  await db.close()
-  await mongoServer.stop()
-})
 
 test.each([
   ['message:send', internalSocket.sendMessage],
   ['message:modify', internalSocket.modifyMessage],
   ['messages:room', internalSocket.getMessagesFromRoom],
-  ['rooms:enter', internalSocket.enterRoom]
+  ['rooms:enter', internalSocket.enterRoom],
+  ['rooms:read', internalSocket.readMessage]
 ])('socket %s', async (cmd, called: any) => {
   const userId = new ObjectID()
   const body = { cmd }
