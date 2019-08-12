@@ -27,7 +27,15 @@ test.each([
   ['  aaaa', false],
   ['a@hoge', false],
   ['&amp;aa%&gt;&lt;', false],
-  ['@hoge', false]
+  ['@hoge', false],
+  ['insert', false],
+  ['update', false],
+  ['find', false],
+  ['remove', false],
+  ['removed', false],
+  ['X-', false],
+  ['x-', false],
+  ['yx-', true]
 ])('isValidAccount (%s)', (arg: string, answer) => {
   const isValid = isValidAccount(arg)
   expect(isValid).toStrictEqual(answer)

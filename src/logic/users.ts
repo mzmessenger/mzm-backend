@@ -7,7 +7,11 @@ import * as db from '../lib/db'
 import { enterRoom } from './rooms'
 
 export function isValidAccount(account: string): boolean {
-  if (isEmpty(account, { ignore_whitespace: true })) {
+  if (
+    isEmpty(account, { ignore_whitespace: true }) ||
+    /.*(insert|update|find|remove).*/.test(account) ||
+    /^(X|x)-/.test(account)
+  ) {
     return false
   }
   return /^[a-zA-Z\d_-]+$/.test(account)
