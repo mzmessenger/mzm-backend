@@ -16,7 +16,7 @@ export async function increment(ackid: string, messages: string[]) {
   const queue = JSON.parse(messages[1]) as UnreadQueue
 
   await db.collections.enter.updateMany(
-    { roomId: new ObjectID(queue.roomId) },
+    { roomId: new ObjectID(queue.roomId), unreadCounter: { $lt: 100 } },
     { $inc: { unreadCounter: 1 } }
   )
   await redis.xack(UNREAD_STREAM, UNREAD_GROUP, ackid)
