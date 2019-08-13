@@ -8,5 +8,6 @@
     "module": "commonjs",
     "target": "es2018",
     "moduleResolution": "node"
-  }
+  },
+  "exclude": ["node_modules", "**/*.test.ts"]
 }
