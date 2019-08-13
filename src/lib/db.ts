@@ -32,7 +32,8 @@ export async function connect(uri: string = MONGODB_URI) {
   }
 
   const client = await MongoClient.connect(uri, {
-    useNewUrlParser: true
+    useNewUrlParser: true,
+    useUnifiedTopology: true
   })
 
   const db = client.db('mzm')

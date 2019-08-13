@@ -17,7 +17,8 @@ export async function getDbConnection(uri: string) {
   assert.strictEqual(process.env.NODE_ENV, 'test')
 
   const client = await MongoClient.connect(uri, {
-    useNewUrlParser: true
+    useNewUrlParser: true,
+    useUnifiedTopology: true
   })
 
   return client
