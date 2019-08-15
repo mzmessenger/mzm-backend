@@ -5,7 +5,8 @@ import {
   GENERAL_ROOM_NAME,
   BANNED_CHARS_REGEXP_IN_ROOM_NAME,
   BANNED_UNICODE_REGEXP_IN_ROOM_NAME,
-  USER_LIMIT
+  USER_LIMIT,
+  MAX_ROOM_NAME_LENGTH
 } from '../config'
 import { BadRequest } from '../lib/errors'
 import { getUserId } from '../lib/utils'
@@ -20,6 +21,8 @@ export async function createRoom(
   let name = decodeURIComponent((req.body.name || '').trim())
   if (isEmpty(name)) {
     throw new BadRequest({ reason: 'name is empty' })
+  } else if (name.length > MAX_ROOM_NAME_LENGTH) {
+    throw new BadRequest({ reason: `over ${MAX_ROOM_NAME_LENGTH}` })
   } else if (
     BANNED_CHARS_REGEXP_IN_ROOM_NAME.test(name) ||
     BANNED_UNICODE_REGEXP_IN_ROOM_NAME.test(name)

@@ -40,7 +40,8 @@ test.each([['aaa', 'aaa'], ['日本語　', '日本語'], ['🍣', '🍣']])(
 test.each([
   ['slash', '/hoge/fuga'],
   ['back slash', 't\\t'],
-  ['space', 'aaa bbb']
+  ['space', 'aaa bbb'],
+  ['max length', 'a'.repeat(81)]
 ])('createRoom fail (%s)', async (_label, name) => {
   expect.assertions(1)
 
