@@ -20,25 +20,34 @@ afterAll(async () => {
   await mongoServer.stop()
 })
 
+test.each([['valid1234'], ['valid_1234'], ['a-ho-ge'], ['yx-']])(
+  'isValidAccount success (%s)',
+  (arg: string) => {
+    const isValid = isValidAccount(arg)
+    expect(isValid).toStrictEqual(true)
+  }
+)
+
 test.each([
-  ['valid1234', true],
-  ['valid_1234', true],
-  ['a-ho-ge', true],
-  ['  aaaa', false],
-  ['a@hoge', false],
-  ['&amp;aa%&gt;&lt;', false],
-  ['@hoge', false],
-  ['insert', false],
-  ['update', false],
-  ['find', false],
-  ['remove', false],
-  ['removed', false],
-  ['X-', false],
-  ['x-', false],
-  ['yx-', true]
-])('isValidAccount (%s)', (arg: string, answer) => {
+  ['  aaaa'],
+  ['test test'],
+  ['a@hoge'],
+  ['&amp;aa%&gt;&lt;'],
+  ['@hoge'],
+  ['insert'],
+  ['update'],
+  ['find'],
+  ['remove'],
+  ['removed'],
+  ['X-'],
+  ['x-'],
+  ['here'],
+  ['online'],
+  ['all'],
+  ['channel']
+])('isValidAccount fail (%s)', (arg: string) => {
   const isValid = isValidAccount(arg)
-  expect(isValid).toStrictEqual(answer)
+  expect(isValid).toStrictEqual(false)
 })
 
 test('initUser', async () => {
