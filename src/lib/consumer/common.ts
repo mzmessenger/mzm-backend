@@ -7,7 +7,7 @@ export async function initConsumerGroup(stream: string, groupName: string) {
     await redis.xgroup('setid', stream, groupName, '$')
   } catch (e) {
     try {
-      await redis.xgroup('create', stream, groupName, '$')
+      await redis.xgroup('create', stream, groupName, '$', 'MKSTREAM')
     } catch (e) {
       logger.error(`failed creating xgroup (${stream}, ${groupName}):`, e)
     }
