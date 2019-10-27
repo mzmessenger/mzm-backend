@@ -13,6 +13,7 @@ export async function saveMessage(
     message: message,
     roomId: new ObjectID(roomId),
     userId: new ObjectID(userId),
+    iine: 0,
     updated: false,
     createdAt: new Date(),
     updatedAt: null
@@ -54,6 +55,7 @@ export async function getMessages(
     messages.unshift({
       id: doc._id.toHexString(),
       message: unescape(doc.message),
+      iine: doc.iine ? doc.iine : 0,
       userId: doc.userId.toHexString(),
       updated: doc.updated ? doc.updated : false,
       createdAt: doc.createdAt,

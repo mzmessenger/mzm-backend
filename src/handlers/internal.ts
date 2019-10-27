@@ -4,6 +4,7 @@ import { SendMessage } from '../types'
 import {
   ReceiveMessage,
   sendMessage,
+  iine,
   modifyMessage,
   getMessagesFromRoom,
   enterRoom,
@@ -15,6 +16,8 @@ export async function socket(req: Request) {
   const data = req.body as ReceiveMessage
   if (data.cmd === 'message:send') {
     return await sendMessage(user, data)
+  } else if (data.cmd === 'message:iine') {
+    return await iine(user, data)
   } else if (data.cmd === 'message:modify') {
     return await modifyMessage(user, data)
   } else if (data.cmd === 'messages:room') {

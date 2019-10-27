@@ -8,6 +8,7 @@ export type Message = {
   id: string
   userId: string
   message: string
+  iine: number
   updated: boolean
   createdAt: Date
   updatedAt: Date | null
@@ -49,6 +50,13 @@ export type SendMessage =
       user: string
       cmd: 'rooms:read'
       room: string
+    }
+  | {
+      cmd: 'message:iine'
+      user?: string
+      room: string
+      id: string
+      iine: number
     }
 
 export type UnreadQueue = {

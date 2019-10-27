@@ -85,6 +85,7 @@ export type Removed = {
 export type Message = {
   _id?: ObjectId
   message: string
+  iine: number
   roomId: ObjectId
   userId: ObjectId
   updated: boolean

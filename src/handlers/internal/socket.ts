@@ -22,6 +22,7 @@ export type ReceiveMessage =
     }
   | Send
   | ModifyMessage
+  | IineMessage
   | GetMessages
   | EnterRoom
   | ReadMessage
@@ -51,6 +52,7 @@ export async function sendMessage(user: string, data: Send) {
       userId: user,
       userAccount: u.account,
       message: unescape(message),
+      iine: 0,
       updated: false,
       createdAt: new Date(Date.now()),
       updatedAt: null
@@ -62,6 +64,33 @@ export async function sendMessage(user: string, data: Send) {
 
   const users = await getAllUserIdsInRoom(room)
   addQueueToUsers(users, send)
+  return
+}
+
+type IineMessage = {
+  cmd: 'message:iine'
+  id: string
+}
+
+export async function iine(user: string, data: IineMessage) {
+  const target = await db.collections.messages.findOne({
+    _id: new ObjectID(data.id)
+  })
+
+  await db.collections.messages.updateOne(
+    { _id: target._id },
+    { $inc: { iine: 1 } }
+  )
+
+  const users = await getAllUserIdsInRoom(target.roomId.toHexString())
+  const send: SendMessage = {
+    cmd: 'message:iine',
+    iine: (target.iine ? target.iine : 0) + 1,
+    room: target.roomId.toHexString(),
+    id: target._id.toHexString()
+  }
+  addQueueToUsers(users, send)
+
   return
 }
 
@@ -104,6 +133,7 @@ export async function modifyMessage(user: string, data: ModifyMessage) {
     message: {
       id: from._id.toHexString(),
       message: unescape(message),
+      iine: from.iine ? from.iine : 0,
       userId: from.userId.toHexString(),
       userAccount: u.account,
       updated: true,

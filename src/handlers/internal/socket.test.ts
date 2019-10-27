@@ -71,6 +71,7 @@ test('modifyMessage', async () => {
     userId,
     updated: false,
     message: 'insert',
+    iine: 0,
     createdAt,
     updatedAt: null
   })
@@ -122,4 +123,29 @@ test('readMessage', async () => {
   expect(updated.unreadCounter).toStrictEqual(0)
 
   expect(addMessageQueueMock.mock.calls.length).toStrictEqual(1)
+})
+
+test('iine', async () => {
+  const userId = new ObjectID()
+
+  const seed = await db.collections.messages.insertOne({
+    roomId: new ObjectID(),
+    userId,
+    message: 'iine',
+    iine: 1,
+    updated: false,
+    createdAt: new Date(),
+    updatedAt: null
+  })
+
+  await socket.iine(userId.toHexString(), {
+    cmd: 'message:iine',
+    id: seed.insertedId.toHexString()
+  })
+
+  const message = await db.collections.messages.findOne({
+    _id: seed.insertedId
+  })
+
+  expect(message.iine).toStrictEqual(2)
 })

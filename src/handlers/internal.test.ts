@@ -12,7 +12,8 @@ test.each([
   ['message:modify', internalSocket.modifyMessage],
   ['messages:room', internalSocket.getMessagesFromRoom],
   ['rooms:enter', internalSocket.enterRoom],
-  ['rooms:read', internalSocket.readMessage]
+  ['rooms:read', internalSocket.readMessage],
+  ['message:iine', internalSocket.iine]
 ])('socket %s', async (cmd, called: any) => {
   const userId = new ObjectID()
   const body = { cmd }
