@@ -57,6 +57,7 @@ test('getMessages', async () => {
       message: `${i}-message`,
       roomId,
       userId,
+      iine: i,
       updated: false,
       createdAt: new Date(),
       updatedAt: null
@@ -87,6 +88,7 @@ test('getMessages', async () => {
     expect(messageMap.get(message.id).roomId.toHexString()).toStrictEqual(
       roomId.toHexString()
     )
+    expect(message.iine).toStrictEqual(messageMap.get(message.id).iine)
   }
 
   messages = await getMessages(roomId.toHexString(), messages.messages[0].id)
@@ -107,6 +109,7 @@ test('getMessages just', async () => {
       message: `${i}-message`,
       roomId,
       userId,
+      iine: 0,
       updated: false,
       createdAt: new Date(),
       updatedAt: null
