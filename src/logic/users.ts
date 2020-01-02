@@ -1,5 +1,5 @@
 import { ObjectID } from 'mongodb'
-import { isEmpty } from 'validator'
+import isEmpty from 'validator/lib/isEmpty'
 import { GENERAL_ROOM_NAME } from '../config'
 import { Room as SendRoom } from '../types'
 import logger from '../lib/logger'

@@ -83,9 +83,9 @@ test('getUsers', async () => {
   ])
 
   const userIds = users.map(u => u._id)
-  const userMap = (await db.collections.users
-    .find({ _id: { $in: userIds } })
-    .toArray()).reduce((map, current) => {
+  const userMap = (
+    await db.collections.users.find({ _id: { $in: userIds } }).toArray()
+  ).reduce((map, current) => {
     map.set(current._id.toHexString(), current)
     return map
   }, new Map<string, db.User>())

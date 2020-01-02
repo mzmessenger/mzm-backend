@@ -1,5 +1,8 @@
 import { ObjectID } from 'mongodb'
-import { escape, unescape, trim, isEmpty } from 'validator'
+import escape from 'validator/lib/escape'
+import unescape from 'validator/lib/unescape'
+import trim from 'validator/lib/trim'
+import isEmpty from 'validator/lib/isEmpty'
 import { SendMessage } from '../../types'
 import * as db from '../../lib/db'
 import {

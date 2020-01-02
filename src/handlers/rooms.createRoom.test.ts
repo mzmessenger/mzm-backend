@@ -19,23 +19,24 @@ afterAll(async () => {
   await mongoServer.stop()
 })
 
-test.each([['aaa', 'aaa'], ['日本語　', '日本語'], ['🍣', '🍣']])(
-  'createRoom success (%s, %s)',
-  async (name, createdName) => {
-    const userId = new ObjectID()
-    const body = { name }
-    const req = createRequest(userId, { body })
+test.each([
+  ['aaa', 'aaa'],
+  ['日本語　', '日本語'],
+  ['🍣', '🍣']
+])('createRoom success (%s, %s)', async (name, createdName) => {
+  const userId = new ObjectID()
+  const body = { name }
+  const req = createRequest(userId, { body })
 
-    const { id } = await createRoom(req)
+  const { id } = await createRoom(req)
 
-    const created = await db.collections.rooms.findOne({
-      _id: new ObjectID(id)
-    })
+  const created = await db.collections.rooms.findOne({
+    _id: new ObjectID(id)
+  })
 
-    expect(created.name).toStrictEqual(createdName)
-    expect(created.createdBy).toStrictEqual(userId.toHexString())
-  }
-)
+  expect(created.name).toStrictEqual(createdName)
+  expect(created.createdBy).toStrictEqual(userId.toHexString())
+})
 
 test.each([
   ['slash', '/hoge/fuga'],

@@ -1,5 +1,5 @@
 import { ObjectID } from 'mongodb'
-import { unescape } from 'validator'
+import unescape from 'validator/lib/unescape'
 import { MESSAGE_LIMIT } from '../config'
 import * as db from '../lib/db'
 import { Message } from '../types'

@@ -47,7 +47,7 @@ test('errorHandler (Internal Server Error)', cb => {
 test.each([
   [{ error: new HttpErrors.BadRequest('BadRequest') }],
   [{ error: new HttpErrors.Forbidden('Forbidden') }]
-])('errorHandler (%s)', ({ error }, cb) => {
+])('errorHandler (%s)', ({ error }) => {
   expect.assertions(4)
 
   const send = jest.fn(function(arg) {
@@ -56,7 +56,6 @@ test.each([
 
     expect(this.status.mock.calls[0][0]).toEqual(error.status)
     expect(arg).toEqual(error.toResponse())
-    ;(cb as any)()
   })
 
   const res = { status: jest.fn().mockReturnThis(), send }
@@ -77,27 +76,23 @@ test('checkLogin (success)', cb => {
   checkLogin((req as any) as Request, {} as Response, next)
 })
 
-test.each([[null], [undefined], ['']])(
-  'checkLogin send 401 (%s)',
-  (userId, cb) => {
-    expect.assertions(4)
+test.each([[null], [undefined], ['']])('checkLogin send 401 (%s)', userId => {
+  expect.assertions(4)
 
-    const req = { headers: { 'x-user-id': userId } }
+  const req = { headers: { 'x-user-id': userId } }
 
-    const send = jest.fn(function(arg) {
-      expect(this.status.mock.calls.length).toBe(1)
-      expect(this.send.mock.calls.length).toBe(1)
+  const send = jest.fn(function(arg) {
+    expect(this.status.mock.calls.length).toBe(1)
+    expect(this.send.mock.calls.length).toBe(1)
 
-      expect(this.status.mock.calls[0][0]).toEqual(401)
-      expect(arg).toEqual('not login')
-      ;(cb as any)()
-    })
+    expect(this.status.mock.calls[0][0]).toEqual(401)
+    expect(arg).toEqual('not login')
+  })
 
-    const res = { status: jest.fn().mockReturnThis(), send }
+  const res = { status: jest.fn().mockReturnThis(), send }
 
-    checkLogin((req as any) as Request, (res as any) as Response, jest.fn())
-  }
-)
+  checkLogin((req as any) as Request, (res as any) as Response, jest.fn())
+})
 
 test('init', async () => {
   const initRemoveMock = getMockType(consumerRemove.initRemoveConsumerGroup)

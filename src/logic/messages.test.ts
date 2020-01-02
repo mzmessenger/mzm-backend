@@ -70,11 +70,13 @@ test('getMessages', async () => {
   let messages = await getMessages(roomId.toHexString())
 
   const idList = messages.messages.map(message => new ObjectID(message.id))
-  const messageMap = (await db.collections.messages
-    .find({
-      _id: { $in: idList }
-    })
-    .toArray()).reduce((map, current) => {
+  const messageMap = (
+    await db.collections.messages
+      .find({
+        _id: { $in: idList }
+      })
+      .toArray()
+  ).reduce((map, current) => {
     map.set(current._id.toHexString(), current)
     return map
   }, new Map<string, db.Message>())

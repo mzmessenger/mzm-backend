@@ -1,6 +1,6 @@
 import { Request } from 'express'
 import { ObjectID } from 'mongodb'
-import { isEmpty } from 'validator'
+import isEmpty from 'validator/lib/isEmpty'
 import {
   GENERAL_ROOM_NAME,
   BANNED_CHARS_REGEXP_IN_ROOM_NAME,
