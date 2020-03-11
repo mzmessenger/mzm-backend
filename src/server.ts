@@ -2,30 +2,28 @@ import cluster from 'cluster'
 import http from 'http'
 import express from 'express'
 import bodyParser from 'body-parser'
+import helmet from 'helmet'
 import { WORKER_NUM, API_LISTEN } from './config'
 import logger from './lib/logger'
 import redis from './lib/redis'
 import * as db from './lib/db'
-import wrap from './lib/wrap'
+import { wrap, streamWrap } from './lib/wrap'
 import * as rooms from './handlers/rooms'
 import * as user from './handlers/users'
+import * as icon from './handlers/icon'
 import * as internal from './handlers/internal'
 import { checkLogin, errorHandler, init } from './logic/server'
 
 const app = express()
+app.use(helmet())
 
 const jsonParser = bodyParser.json({ limit: '1mb' })
 
 app.post('/api/rooms', checkLogin, jsonParser, wrap(rooms.createRoom))
 app.post('/api/rooms/enter', checkLogin, jsonParser, wrap(rooms.enterRoom))
 app.delete('/api/rooms/enter', checkLogin, jsonParser, wrap(rooms.exitRoom))
-app.get(
-  '/api/rooms/:roomid/users',
-  checkLogin,
-  jsonParser,
-  wrap(rooms.getUsers)
-)
-app.get('/api/user/@me', checkLogin, jsonParser, wrap(user.getUserInfo))
+app.get('/api/rooms/:roomid/users', checkLogin, wrap(rooms.getUsers))
+app.get('/api/user/@me', checkLogin, wrap(user.getUserInfo))
 app.post('/api/user/signup', checkLogin, jsonParser, wrap(user.signUp))
 app.post(
   '/api/user/@me/account',
@@ -33,6 +31,8 @@ app.post(
   jsonParser,
   wrap(user.updateAccount)
 )
+
+app.get('/api/icon/user/:userid', streamWrap(icon.userIcon))
 
 app.post('/api/internal/socket', jsonParser, wrap(internal.socket))
 

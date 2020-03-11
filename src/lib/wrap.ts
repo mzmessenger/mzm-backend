@@ -1,13 +1,38 @@
 import { Request, Response, NextFunction } from 'express'
 
 interface WrapFn {
-  (req: Request): Promise<any>
+  (req: Request): Promise<object | void>
 }
 
-export default function wrap(fn: WrapFn) {
+export const wrap = (fn: WrapFn) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    fn(req)
-      .then(data => res.status(200).json(data))
-      .catch(e => next(e))
+    try {
+      fn(req)
+        .then(data => res.status(200).json(data))
+        .catch(e => next(e))
+    } catch (e) {
+      next(e)
+    }
+  }
+}
+
+interface StreamWrapFn {
+  (req: Request): Promise<{ headers: object; stream: NodeJS.ReadableStream }>
+}
+
+export const streamWrap = (fn: StreamWrapFn) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    try {
+      fn(req)
+        .then(({ headers, stream }) => {
+          if (headers) {
+            res.set(headers)
+          }
+          stream.pipe(res).on('error', e => next(e))
+        })
+        .catch(e => next(e))
+    } catch (e) {
+      next(e)
+    }
   }
 }

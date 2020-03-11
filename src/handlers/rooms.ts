@@ -9,7 +9,7 @@ import {
   MAX_ROOM_NAME_LENGTH
 } from '../config'
 import { BadRequest } from '../lib/errors'
-import { getUserId } from '../lib/utils'
+import { getRequestUserId } from '../lib/utils'
 import * as db from '../lib/db'
 import { popParam } from '../lib/utils'
 import { enterRoom as enterRoomLogic, creatRoom } from '../logic/rooms'
@@ -17,7 +17,7 @@ import { enterRoom as enterRoomLogic, creatRoom } from '../logic/rooms'
 export async function createRoom(
   req: Request
 ): Promise<{ id: string; name: string }> {
-  const user = getUserId(req)
+  const user = getRequestUserId(req)
   let name = decodeURIComponent((req.body.name || '').trim())
   if (isEmpty(name)) {
     throw new BadRequest({ reason: 'name is empty' })
@@ -44,7 +44,7 @@ export async function createRoom(
 }
 
 export async function enterRoom(req: Request) {
-  const user = getUserId(req)
+  const user = getRequestUserId(req)
   const room = popParam(req.body.room)
   if (isEmpty(room)) {
     throw new BadRequest({ reason: 'room is empty' })
@@ -54,7 +54,7 @@ export async function enterRoom(req: Request) {
 }
 
 export async function exitRoom(req: Request) {
-  const user = getUserId(req)
+  const user = getRequestUserId(req)
   const room = popParam(req.body.room)
   if (isEmpty(room)) {
     throw new BadRequest({ reason: 'room is empty' })

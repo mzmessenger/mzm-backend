@@ -1,12 +1,12 @@
 import { Request } from 'express'
 import { ObjectID } from 'mongodb'
 import { NotFound, BadRequest } from '../lib/errors'
-import { getUserId, popParam } from '../lib/utils'
+import { getRequestUserId, popParam } from '../lib/utils'
 import { isValidAccount, initUser } from '../logic/users'
 import * as db from '../lib/db'
 
 export async function signUp(req: Request) {
-  const id = getUserId(req)
+  const id = getRequestUserId(req)
   const account = popParam(req.body.account)
   if (!account) {
     throw new BadRequest('account is empty')
@@ -26,7 +26,7 @@ export async function signUp(req: Request) {
 }
 
 export async function getUserInfo(req: Request) {
-  const id = getUserId(req)
+  const id = getRequestUserId(req)
 
   const user = await db.collections.users.findOne({ _id: new ObjectID(id) })
 
@@ -43,7 +43,7 @@ export async function getUserInfo(req: Request) {
 }
 
 export async function updateAccount(req: Request) {
-  const user = getUserId(req)
+  const user = getRequestUserId(req)
   const account = popParam(req.body.account)
   if (!account) {
     throw new BadRequest('account is empty')

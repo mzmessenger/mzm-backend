@@ -3,7 +3,7 @@ import { Request } from 'express'
 import escape from 'validator/lib/escape'
 import trim from 'validator/lib/trim'
 
-export function getUserId(req: IncomingMessage | Request): string {
+export function getRequestUserId(req: IncomingMessage | Request): string {
   const user: string = req.headers['x-user-id'] as string
   return user
 }

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import wrap from './wrap'
+import { wrap } from './wrap'
 
 test('wrap success', cb => {
   expect.assertions(4)
