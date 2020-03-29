@@ -4,6 +4,7 @@ import { NotFound, BadRequest } from '../lib/errors'
 import { getRequestUserId, popParam } from '../lib/utils'
 import { isValidAccount, initUser } from '../logic/users'
 import * as db from '../lib/db'
+import { createIconPath } from '../lib/utils'
 
 export async function signUp(req: Request) {
   const id = getRequestUserId(req)
@@ -39,7 +40,11 @@ export async function getUserInfo(req: Request) {
     })
   }
 
-  return { id: user._id.toHexString(), account: user.account }
+  return {
+    id: user._id.toHexString(),
+    account: user.account,
+    icon: createIconPath(user.account, user.icon?.version)
+  }
 }
 
 export async function updateAccount(req: Request) {

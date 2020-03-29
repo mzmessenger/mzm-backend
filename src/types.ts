@@ -13,6 +13,7 @@ export type Message = {
   createdAt: Date
   updatedAt: Date | null
   userAccount: string
+  icon: string
 }
 
 export type SendMessage =
