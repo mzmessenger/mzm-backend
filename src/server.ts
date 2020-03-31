@@ -2,8 +2,9 @@ import cluster from 'cluster'
 import http from 'http'
 import express from 'express'
 import bodyParser from 'body-parser'
+import multer from 'multer'
 import helmet from 'helmet'
-import { WORKER_NUM, API_LISTEN } from './config'
+import { WORKER_NUM, API_LISTEN, MULTER_PATH } from './config'
 import logger from './lib/logger'
 import redis from './lib/redis'
 import * as db from './lib/db'
@@ -13,6 +14,11 @@ import * as user from './handlers/users'
 import * as icon from './handlers/icon'
 import * as internal from './handlers/internal'
 import { checkLogin, errorHandler, init } from './logic/server'
+
+const iconUpload = multer({
+  dest: MULTER_PATH,
+  limits: { fileSize: 1000 * 1000 }
+})
 
 const app = express()
 app.use(helmet())
@@ -32,7 +38,14 @@ app.post(
   wrap(user.updateAccount)
 )
 
-app.get('/api/icon/user/:userid', streamWrap(icon.userIcon))
+app.get('/api/icon/user/:account', streamWrap(icon.getUserIcon))
+app.get('/api/icon/user/:account/:version', streamWrap(icon.getUserIcon))
+app.post(
+  '/api/icon/user',
+  checkLogin,
+  iconUpload.single('icon'),
+  wrap(icon.uploadUserIcon)
+)
 
 app.post('/api/internal/socket', jsonParser, wrap(internal.socket))
 

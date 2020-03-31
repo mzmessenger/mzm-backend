@@ -11,7 +11,7 @@ import {
 import { BadRequest } from '../lib/errors'
 import { getRequestUserId } from '../lib/utils'
 import * as db from '../lib/db'
-import { popParam } from '../lib/utils'
+import { popParam, createIconPath } from '../lib/utils'
 import { enterRoom as enterRoomLogic, creatRoom } from '../logic/rooms'
 
 export async function createRoom(
@@ -79,6 +79,7 @@ export async function exitRoom(req: Request) {
 type EnterUser = {
   userId: string
   account: string
+  icon: string
   enterId: string
 }
 
@@ -126,10 +127,13 @@ export async function getUsers(
     const user: EnterUser = {
       userId: doc.userId.toHexString(),
       account: 'removed',
+      icon: null,
       enterId: doc._id.toHexString()
     }
     if (doc.user && doc.user[0]) {
-      user.account = doc.user[0].account
+      const [u] = doc.user
+      user.account = u.account ? u.account : null
+      user.icon = createIconPath(u?.account, u?.icon?.version)
     }
     users.push(user)
   }

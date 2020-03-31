@@ -64,3 +64,15 @@ export const BANNED_UNICODE_REGEXP_IN_ROOM_NAME = new RegExp(unicode.join('|'))
 export const UNREAD_STREAM = 'stream:unread'
 
 export const MAX_ROOM_NAME_LENGTH = 80
+
+export const USER_ICON_PREFIX = 'usericon/'
+
+export const MULTER_PATH = '/tmp'
+
+export const AWS_BUCKET = process.env.AWS_BUCKET
+
+export const AWS_REGION = process.env.AWS_REGION
+
+export const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID
+
+export const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY

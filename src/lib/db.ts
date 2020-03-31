@@ -73,6 +73,10 @@ export type Enter = {
 export type User = {
   _id: ObjectId
   account: string
+  icon?: {
+    key: string
+    version: string
+  }
 }
 
 export type Removed = {

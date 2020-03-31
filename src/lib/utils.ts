@@ -14,3 +14,14 @@ export function popParam(param: string): string {
   }
   return escape(trim(param))
 }
+
+export const createIconPath = (account: string, version?: string): string => {
+  if (!account) {
+    return null
+  }
+  let icon = `/api/icon/user/${account}`
+  if (version) {
+    icon += `/${version}`
+  }
+  return icon
+}

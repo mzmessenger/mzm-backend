@@ -2,6 +2,7 @@ import { ObjectID } from 'mongodb'
 import unescape from 'validator/lib/unescape'
 import { MESSAGE_LIMIT } from '../config'
 import * as db from '../lib/db'
+import { createIconPath } from '../lib/utils'
 import { Message } from '../types'
 
 export async function saveMessage(
@@ -52,6 +53,8 @@ export async function getMessages(
 
   const messages: Message[] = []
   for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
+    const [user] = doc.user
+
     messages.unshift({
       id: doc._id.toHexString(),
       message: unescape(doc.message),
@@ -60,7 +63,8 @@ export async function getMessages(
       updated: doc.updated ? doc.updated : false,
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt ? doc.updatedAt : null,
-      userAccount: doc.user[0] ? doc.user[0].account : null
+      userAccount: user ? user.account : null,
+      icon: createIconPath(user?.account, user?.icon?.version)
     })
   }
   return { existHistory: messages.length >= MESSAGE_LIMIT, messages }

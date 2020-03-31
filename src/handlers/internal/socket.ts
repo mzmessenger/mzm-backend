@@ -5,6 +5,7 @@ import trim from 'validator/lib/trim'
 import isEmpty from 'validator/lib/isEmpty'
 import { SendMessage } from '../../types'
 import * as db from '../../lib/db'
+import { createIconPath } from '../../lib/utils'
 import {
   addMessageQueue,
   addQueueToUsers,
@@ -58,7 +59,8 @@ export async function sendMessage(user: string, data: Send) {
       iine: 0,
       updated: false,
       createdAt: new Date(Date.now()),
-      updatedAt: null
+      updatedAt: null,
+      icon: createIconPath(u.account, u.icon?.version)
     },
     room: room
   }
@@ -141,7 +143,8 @@ export async function modifyMessage(user: string, data: ModifyMessage) {
       userAccount: u.account,
       updated: true,
       createdAt: from.createdAt,
-      updatedAt: updatedAt
+      updatedAt: updatedAt,
+      icon: createIconPath(u.account, u.icon?.version)
     },
     room: from.roomId.toHexString()
   }
