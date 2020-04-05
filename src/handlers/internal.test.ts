@@ -1,5 +1,4 @@
 jest.mock('../lib/logger')
-jest.mock('../lib/logger')
 jest.mock('./internal/socket')
 
 import { ObjectID } from 'mongodb'

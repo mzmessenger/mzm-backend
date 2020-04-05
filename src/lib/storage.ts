@@ -1,3 +1,4 @@
+import fs from 'fs'
 import { Readable } from 'stream'
 import AWS from 'aws-sdk'
 import {
@@ -17,6 +18,10 @@ AWS.config.update({
   region: AWS_REGION
 })
 const s3 = new AWS.S3({ apiVersion: '2006-03-01' })
+
+export const createBodyFromFilePath = (filepath: string) => {
+  return fs.createReadStream(filepath)
+}
 
 export const putObject = async (params: {
   Key: string

@@ -35,18 +35,30 @@ export async function dropCollection(uri: string, name: string) {
   return await db.collection(name).drop()
 }
 
+type TestRequest = Request & { file?: { [key: string]: string | number } }
+
 export function createRequest(
-  userId: ObjectID,
-  { params, query, body }: { params?: any; query?: any; body?: any }
-): Request {
+  userId: ObjectID | null,
+  {
+    params,
+    query,
+    body,
+    file
+  }: {
+    params?: { [key: string]: string }
+    query?: { [key: string]: string }
+    body?: any
+    file?: { [key: string]: string | number }
+  }
+): TestRequest {
   const req = {
     headers: {
-      'x-user-id': userId.toHexString()
+      'x-user-id': userId?.toHexString()
     },
     query: {},
     params: {},
     body: {}
-  }
+  } as any
 
   if (params) {
     req.params = params
@@ -60,5 +72,9 @@ export function createRequest(
     req.body = body
   }
 
-  return (req as any) as Request
+  if (file) {
+    req.file = file
+  }
+
+  return req as TestRequest
 }

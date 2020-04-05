@@ -1,5 +1,7 @@
 import { config } from 'dotenv'
-config()
+if (process.env.NODE_ENV !== 'test') {
+  config()
+}
 
 export const MONGODB_URI =
   process.env.NODE_ENV === 'test' ? null : process.env.MONGODB_URI
@@ -64,6 +66,8 @@ export const BANNED_UNICODE_REGEXP_IN_ROOM_NAME = new RegExp(unicode.join('|'))
 export const UNREAD_STREAM = 'stream:unread'
 
 export const MAX_ROOM_NAME_LENGTH = 80
+
+export const MAX_USER_ICON_SIZE = 400
 
 export const USER_ICON_PREFIX = 'usericon/'
 
