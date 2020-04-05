@@ -19,7 +19,7 @@ export async function remove(ackid: string, messages: string[]) {
     return
   }
   const enter = await db.collections.enter.find({ userId: userId }).toArray()
-  const ids = enter.map(e => e.roomId)
+  const ids = enter.map((e) => e.roomId)
   const remove: db.Removed = {
     account: target.account,
     originId: target._id,

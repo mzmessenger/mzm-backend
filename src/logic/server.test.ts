@@ -24,12 +24,12 @@ afterAll(async () => {
   await mongoServer.stop()
 })
 
-test('errorHandler (Internal Server Error)', cb => {
+test('errorHandler (Internal Server Error)', (cb) => {
   expect.assertions(4)
 
   const error = new Error('error!')
 
-  const send = jest.fn(function(arg) {
+  const send = jest.fn(function (arg) {
     expect(this.status.mock.calls.length).toBe(1)
     expect(this.send.mock.calls.length).toBe(1)
 
@@ -50,7 +50,7 @@ test.each([
 ])('errorHandler (%s)', ({ error }) => {
   expect.assertions(4)
 
-  const send = jest.fn(function(arg) {
+  const send = jest.fn(function (arg) {
     expect(this.status.mock.calls.length).toBe(1)
     expect(this.send.mock.calls.length).toBe(1)
 
@@ -63,7 +63,7 @@ test.each([
   errorHandler(error, {}, (res as any) as Response, jest.fn())
 })
 
-test('checkLogin (success)', cb => {
+test('checkLogin (success)', (cb) => {
   expect.assertions(1)
 
   const req = { headers: { 'x-user-id': 'aaa' } }
@@ -76,12 +76,12 @@ test('checkLogin (success)', cb => {
   checkLogin((req as any) as Request, {} as Response, next)
 })
 
-test.each([[null], [undefined], ['']])('checkLogin send 401 (%s)', userId => {
+test.each([[null], [undefined], ['']])('checkLogin send 401 (%s)', (userId) => {
   expect.assertions(4)
 
   const req = { headers: { 'x-user-id': userId } }
 
-  const send = jest.fn(function(arg) {
+  const send = jest.fn(function (arg) {
     expect(this.status.mock.calls.length).toBe(1)
     expect(this.send.mock.calls.length).toBe(1)
 

@@ -157,7 +157,7 @@ test('uploadUserIcon', async () => {
 
 test.each([['image/png'], ['image/jpeg']])(
   'uploadUserIcon: success file type (%s)',
-  async mimetype => {
+  async (mimetype) => {
     const userId = new ObjectID()
 
     await db.collections.users.insertOne({
@@ -191,7 +191,7 @@ test.each([['image/png'], ['image/jpeg']])(
 
 test.each([['image/gif', 'image/svg+xml']])(
   'uploadUserIcon: fail file type (%s)',
-  async mimetype => {
+  async (mimetype) => {
     expect.assertions(1)
     const userId = new ObjectID()
 

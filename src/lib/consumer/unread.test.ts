@@ -34,7 +34,7 @@ test('increment', async () => {
   })
   await db.collections.users.insertMany(users)
   const roomId = new ObjectID()
-  const enter = userIds.map(userId => ({ userId, roomId, unreadCounter: 0 }))
+  const enter = userIds.map((userId) => ({ userId, roomId, unreadCounter: 0 }))
   // max test
   enter[maxIndex].unreadCounter = maxValue
   await db.collections.enter.insertMany(enter)

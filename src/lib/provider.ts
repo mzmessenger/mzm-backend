@@ -18,7 +18,7 @@ export async function addMessageQueue(data: SendMessage) {
 
 export async function addQueueToUsers(users: string[], data: SendMessage) {
   // todo: too heavy
-  const promises = users.map(user => addMessageQueue({ ...data, user }))
+  const promises = users.map((user) => addMessageQueue({ ...data, user }))
   await Promise.all(promises)
 }
 
