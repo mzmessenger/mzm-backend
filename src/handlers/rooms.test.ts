@@ -22,6 +22,7 @@ afterAll(async () => {
 })
 
 test('exitRoom fail (general)', async () => {
+  expect.assertions(1)
   await initGeneral()
 
   const userId = new ObjectID()

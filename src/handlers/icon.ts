@@ -1,5 +1,4 @@
 import { promisify } from 'util'
-import { createReadStream } from 'fs'
 import crypto from 'crypto'
 import { Request } from 'express'
 import escape from 'validator/lib/escape'
@@ -10,14 +9,17 @@ import { getRequestUserId } from '../lib/utils'
 import * as storage from '../lib/storage'
 import * as db from '../lib/db'
 import logger from '../lib/logger'
-import { USER_ICON_PREFIX } from '../config'
+import { USER_ICON_PREFIX, MAX_USER_ICON_SIZE } from '../config'
 
 const sizeOf = promisify(require('image-size'))
 const randomBytes = promisify(crypto.randomBytes)
 
 export const getUserIcon = async (
   req: Request
-): Promise<{ headers: object; stream: NodeJS.ReadableStream }> => {
+): Promise<{
+  headers: { [key: string]: string | number | Date }
+  stream: NodeJS.ReadableStream
+}> => {
   const account = escape(req.params.account)
   if (!account) {
     throw new NotFound('not found')
@@ -70,9 +72,11 @@ export const uploadUserIcon = async (req: Request & { file: MulterFile }) => {
 
   const dimensions = await sizeOf(file.path)
 
-  const maxSize = 400
-  if (dimensions.width > maxSize || dimensions.height > maxSize) {
-    throw new BadRequest(`size over: ${maxSize}`)
+  if (
+    dimensions.width > MAX_USER_ICON_SIZE ||
+    dimensions.height > MAX_USER_ICON_SIZE
+  ) {
+    throw new BadRequest(`size over: ${MAX_USER_ICON_SIZE}`)
   } else if (dimensions.width !== dimensions.height) {
     throw new BadRequest(`not square: ${JSON.stringify(dimensions)}`)
   }
@@ -83,7 +87,7 @@ export const uploadUserIcon = async (req: Request & { file: MulterFile }) => {
 
   await storage.putObject({
     Key: iconKey,
-    Body: createReadStream(file.path),
+    Body: storage.createBodyFromFilePath(file.path),
     ContentType: file.mimetype,
     CacheControl: 'max-age=604800'
   })
