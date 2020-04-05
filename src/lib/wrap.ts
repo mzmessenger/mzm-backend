@@ -8,8 +8,8 @@ export const wrap = (fn: WrapFn) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       fn(req)
-        .then(data => res.status(200).json(data))
-        .catch(e => next(e))
+        .then((data) => res.status(200).json(data))
+        .catch((e) => next(e))
     } catch (e) {
       next(e)
     }
@@ -28,9 +28,9 @@ export const streamWrap = (fn: StreamWrapFn) => {
           if (headers) {
             res.set(headers)
           }
-          stream.pipe(res).on('error', e => next(e))
+          stream.pipe(res).on('error', (e) => next(e))
         })
-        .catch(e => next(e))
+        .catch((e) => next(e))
     } catch (e) {
       next(e)
     }

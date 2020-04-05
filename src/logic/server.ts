@@ -5,10 +5,10 @@ import { initRemoveConsumerGroup, consumeRemove } from '../lib/consumer/remove'
 import { initUnreadConsumerGroup, consumeUnread } from '../lib/consumer/unread'
 import { initGeneral } from './rooms'
 
-const allHttpErrors = Object.keys(HttpErrors).map(err => HttpErrors[err])
+const allHttpErrors = Object.keys(HttpErrors).map((err) => HttpErrors[err])
 
 export function errorHandler(err, _req, res: Response, _next) {
-  if (allHttpErrors.some(type => err instanceof type)) {
+  if (allHttpErrors.some((type) => err instanceof type)) {
     return res.status(err.status).send(err.toResponse())
   }
   res.status(500).send('Internal Server Error')

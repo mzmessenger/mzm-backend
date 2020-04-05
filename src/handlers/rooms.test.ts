@@ -47,7 +47,7 @@ test('exitRoom fail (general)', async () => {
   }
 })
 
-test.each([[null, '']])('exitRoom BadRequest (%s)', async arg => {
+test.each([[null, '']])('exitRoom BadRequest (%s)', async (arg) => {
   expect.assertions(1)
 
   const body = { room: arg }
@@ -83,7 +83,7 @@ test('getUsers', async () => {
     db.collections.users.insertMany(users)
   ])
 
-  const userIds = users.map(u => u._id)
+  const userIds = users.map((u) => u._id)
   const userMap = (
     await db.collections.users.find({ _id: { $in: userIds } }).toArray()
   ).reduce((map, current) => {

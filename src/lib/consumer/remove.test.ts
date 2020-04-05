@@ -28,7 +28,7 @@ test('remove', async () => {
   const userId = new ObjectID()
   const roomIds = [new ObjectID(), new ObjectID()]
   await db.collections.users.insertOne({ _id: userId, account: 'test' })
-  const insert = roomIds.map(roomId => {
+  const insert = roomIds.map((roomId) => {
     return { userId, roomId }
   })
   await db.collections.enter.insertMany(insert)
@@ -42,7 +42,7 @@ test('remove', async () => {
     .find({ originId: userId })
     .toArray()
   expect(removed.length).toStrictEqual(1)
-  const roomIdString = roomIds.map(r => r.toHexString())
+  const roomIdString = roomIds.map((r) => r.toHexString())
   for (const r of removed) {
     expect(r.enter.length).toStrictEqual(roomIds.length)
     for (const e of r.enter) {
