@@ -26,24 +26,29 @@ export async function signUp(req: Request) {
   return { id: id, account: account }
 }
 
-export async function getUserInfo(req: Request) {
+export const getUserInfo = async (req: Request) => {
   const id = getRequestUserId(req)
 
   const user = await db.collections.users.findOne({ _id: new ObjectID(id) })
 
+  const twitter: string = (req.headers['x-twitter-user-name'] as string) || null
+  const github: string = (req.headers['x-github-user-name'] as string) || null
+
   if (!user || !user.account) {
-    const twitter: string = req.headers['x-twitter-user-name'] as string
     throw new NotFound({
       reason: 'account is not found',
       id,
-      twitter
+      twitter,
+      github
     })
   }
 
   return {
     id: user._id.toHexString(),
     account: user.account,
-    icon: createIconPath(user.account, user.icon?.version)
+    icon: createIconPath(user.account, user.icon?.version),
+    twitterUserName: twitter,
+    githubUserName: github
   }
 }
 
