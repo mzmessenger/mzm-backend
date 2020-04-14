@@ -107,7 +107,9 @@ export async function getUsers(
     }
   ]
 
-  const threshold = popParam(req.query.threshold)
+  const threshold = popParam(
+    typeof req.query.threshold === 'string' ? req.query.threshold : null
+  )
   if (threshold) {
     query.push({
       $match: { _id: { $lt: new ObjectID(threshold) } }
