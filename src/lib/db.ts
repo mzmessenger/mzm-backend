@@ -26,7 +26,7 @@ export enum COLLECTION_NAMES {
 
 let connection: MongoClient = null
 
-export async function connect(uri: string = MONGODB_URI) {
+export const connect = async (uri: string = MONGODB_URI) => {
   if (connection) {
     return connection
   }
@@ -53,7 +53,7 @@ export async function connect(uri: string = MONGODB_URI) {
   return client
 }
 
-export async function close() {
+export const close = async () => {
   connection.close()
 }
 

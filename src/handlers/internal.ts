@@ -11,7 +11,7 @@ import {
   readMessage
 } from './internal/socket'
 
-export async function socket(req: Request) {
+export const socket = async (req: Request) => {
   const user: string = req.headers['x-user-id'] as string
   const data = req.body as ReceiveMessage
   if (data.cmd === 'message:send') {

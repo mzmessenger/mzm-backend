@@ -1,7 +1,7 @@
 import redis from '../redis'
 import logger from '../logger'
 
-export async function initConsumerGroup(stream: string, groupName: string) {
+export const initConsumerGroup = async (stream: string, groupName: string) => {
   // create consumer group
   try {
     await redis.xgroup('setid', stream, groupName, '$')
@@ -14,10 +14,10 @@ export async function initConsumerGroup(stream: string, groupName: string) {
   }
 }
 
-export function createParser(
+export const createParser = (
   handler: (id: string, messages: string[]) => Promise<any>
-) {
-  return async function (read) {
+) => {
+  return async (read) => {
     if (!read) {
       return null
     }
@@ -34,12 +34,12 @@ export function createParser(
   }
 }
 
-export async function consumeGroup(
+export const consumeGroup = async (
   groupName: string,
   consumerName: string,
   stream: string,
   parser: ReturnType<typeof createParser>
-) {
+) => {
   try {
     const res = await redis.xreadgroup(
       'group',

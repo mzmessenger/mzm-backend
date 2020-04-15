@@ -14,9 +14,9 @@ import * as db from '../lib/db'
 import { popParam, createIconPath } from '../lib/utils'
 import { enterRoom as enterRoomLogic, creatRoom } from '../logic/rooms'
 
-export async function createRoom(
+export const createRoom = async (
   req: Request
-): Promise<{ id: string; name: string }> {
+): Promise<{ id: string; name: string }> => {
   const user = getRequestUserId(req)
   let name = decodeURIComponent((req.body.name || '').trim())
   if (isEmpty(name)) {
@@ -43,7 +43,7 @@ export async function createRoom(
   return { id: created._id.toHexString(), name }
 }
 
-export async function enterRoom(req: Request) {
+export const enterRoom = async (req: Request) => {
   const user = getRequestUserId(req)
   const room = popParam(req.body.room)
   if (isEmpty(room)) {
@@ -53,7 +53,7 @@ export async function enterRoom(req: Request) {
   await enterRoomLogic(new ObjectID(user), new ObjectID(room))
 }
 
-export async function exitRoom(req: Request) {
+export const exitRoom = async (req: Request) => {
   const user = getRequestUserId(req)
   const room = popParam(req.body.room)
   if (isEmpty(room)) {
@@ -83,9 +83,9 @@ type EnterUser = {
   enterId: string
 }
 
-export async function getUsers(
+export const getUsers = async (
   req: Request
-): Promise<{ count: number; users: EnterUser[] }> {
+): Promise<{ count: number; users: EnterUser[] }> => {
   const room = popParam(req.params.roomid)
   if (isEmpty(room)) {
     throw new BadRequest({ reason: 'room is empty' })

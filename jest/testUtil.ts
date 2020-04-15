@@ -3,17 +3,17 @@ import { Request } from 'express'
 import { MongoClient, ObjectID } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 
-export function getMockType(arg) {
+export const getMockType = (arg) => {
   return <jest.Mock<typeof arg>>arg
 }
 
-export async function mongoSetup() {
+export const mongoSetup = async () => {
   const mongoServer = new MongoMemoryServer()
   const uri = await mongoServer.getConnectionString()
   return { uri, mongoServer }
 }
 
-export async function getDbConnection(uri: string) {
+export const getDbConnection = async (uri: string) => {
   assert.strictEqual(process.env.NODE_ENV, 'test')
 
   const client = await MongoClient.connect(uri, {
@@ -24,11 +24,11 @@ export async function getDbConnection(uri: string) {
   return client
 }
 
-export async function dropCollection(uri: string, name: string) {
+export const dropCollection = async (uri: string, name: string) => {
   const client = await getDbConnection(uri)
   const db = client.db('mzm')
 
-  const collections = (await db.collections()).map(c => c.collectionName)
+  const collections = (await db.collections()).map((c) => c.collectionName)
   if (!collections.includes(name)) {
     return Promise.resolve()
   }
@@ -37,7 +37,7 @@ export async function dropCollection(uri: string, name: string) {
 
 type TestRequest = Request & { file?: { [key: string]: string | number } }
 
-export function createRequest(
+export const createRequest = (
   userId: ObjectID | null,
   {
     params,
@@ -50,7 +50,7 @@ export function createRequest(
     body?: any
     file?: { [key: string]: string | number }
   }
-): TestRequest {
+): TestRequest => {
   const req = {
     headers: {
       'x-user-id': userId?.toHexString()
