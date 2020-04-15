@@ -7,11 +7,11 @@ import { initConsumerGroup, createParser, consumeGroup } from './common'
 const REMOVE_STREAM = 'stream:remove:user:chat'
 const REMOVE_GROUP = 'group:remove:user'
 
-export async function initRemoveConsumerGroup() {
+export const initRemoveConsumerGroup = async () => {
   await initConsumerGroup(REMOVE_STREAM, REMOVE_GROUP)
 }
 
-export async function remove(ackid: string, messages: string[]) {
+export const remove = async (ackid: string, messages: string[]) => {
   const user = messages[1]
   const userId = new ObjectID(user)
   const target = await db.collections.users.findOne({ _id: userId })
@@ -37,7 +37,7 @@ export async function remove(ackid: string, messages: string[]) {
   logger.info('[remove:user]', user)
 }
 
-export async function consumeRemove() {
+export const consumeRemove = async () => {
   const parser = createParser(remove)
   await consumeGroup(REMOVE_GROUP, 'consume-backend', REMOVE_STREAM, parser)
 }

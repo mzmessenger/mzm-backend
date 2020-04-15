@@ -3,7 +3,7 @@ import logger from './logger'
 import { SendMessage, UnreadQueue } from '../types'
 import { UNREAD_STREAM } from '../config'
 
-export async function addMessageQueue(data: SendMessage) {
+export const addMessageQueue = async (data: SendMessage) => {
   const message = JSON.stringify(data)
   await redis.xadd(
     'stream:socket:message',
@@ -16,13 +16,13 @@ export async function addMessageQueue(data: SendMessage) {
   logger.info('[queue:add:user]', message)
 }
 
-export async function addQueueToUsers(users: string[], data: SendMessage) {
+export const addQueueToUsers = async (users: string[], data: SendMessage) => {
   // todo: too heavy
   const promises = users.map((user) => addMessageQueue({ ...data, user }))
   await Promise.all(promises)
 }
 
-export async function addUnreadQueue(roomId: string) {
+export const addUnreadQueue = async (roomId: string) => {
   const data = { roomId } as UnreadQueue
   redis.xadd(UNREAD_STREAM, 'MAXLEN', 1000, '*', 'unread', JSON.stringify(data))
 }

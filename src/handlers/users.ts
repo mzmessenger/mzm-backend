@@ -6,7 +6,7 @@ import { isValidAccount, initUser } from '../logic/users'
 import * as db from '../lib/db'
 import { createIconPath } from '../lib/utils'
 
-export async function signUp(req: Request) {
+export const signUp = async (req: Request) => {
   const id = getRequestUserId(req)
   const account = popParam(req.body.account)
   if (!account) {
@@ -52,7 +52,7 @@ export const getUserInfo = async (req: Request) => {
   }
 }
 
-export async function updateAccount(req: Request) {
+export const updateAccount = async (req: Request) => {
   const user = getRequestUserId(req)
   const account = popParam(req.body.account)
   if (!account) {

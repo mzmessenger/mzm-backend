@@ -6,7 +6,7 @@ import logger from '../lib/logger'
 import * as db from '../lib/db'
 import { enterRoom } from './rooms'
 
-export function isValidAccount(account: string): boolean {
+export const isValidAccount = (account: string): boolean => {
   if (
     isEmpty(account, { ignore_whitespace: true }) ||
     /.*(insert|update|find|remove).*/.test(account) ||
@@ -18,7 +18,7 @@ export function isValidAccount(account: string): boolean {
   return /^[a-zA-Z\d_-]+$/.test(account)
 }
 
-async function enterGeneral(userId: ObjectID) {
+const enterGeneral = async (userId: ObjectID) => {
   const general: db.Room = await db.collections.rooms.findOne({
     name: GENERAL_ROOM_NAME
   })
@@ -31,7 +31,7 @@ async function enterGeneral(userId: ObjectID) {
   }
 }
 
-export async function initUser(userId: ObjectID, account: string) {
+export const initUser = async (userId: ObjectID, account: string) => {
   const [user] = await Promise.all([
     db.collections.users.insertOne({ _id: userId, account: account }),
     enterGeneral(userId)
@@ -40,7 +40,7 @@ export async function initUser(userId: ObjectID, account: string) {
   return user
 }
 
-export async function getRooms(userId: string): Promise<SendRoom[]> {
+export const getRooms = async (userId: string): Promise<SendRoom[]> => {
   const cursor = await db.collections.enter.aggregate<
     db.Enter & { room: db.Room[] }
   >([
@@ -66,7 +66,7 @@ export async function getRooms(userId: string): Promise<SendRoom[]> {
   return rooms
 }
 
-export async function getAllUserIdsInRoom(roomId: string) {
+export const getAllUserIdsInRoom = async (roomId: string) => {
   const cursor = await db.collections.enter.find({
     roomId: new ObjectID(roomId)
   })

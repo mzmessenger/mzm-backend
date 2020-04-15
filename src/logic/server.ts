@@ -7,7 +7,7 @@ import { initGeneral } from './rooms'
 
 const allHttpErrors = Object.keys(HttpErrors).map((err) => HttpErrors[err])
 
-export function errorHandler(err, _req, res: Response, _next) {
+export const errorHandler = (err, _req, res: Response, _next) => {
   if (allHttpErrors.some((type) => err instanceof type)) {
     return res.status(err.status).send(err.toResponse())
   }
@@ -15,14 +15,14 @@ export function errorHandler(err, _req, res: Response, _next) {
   logger.error('[Internal Server Error]', err)
 }
 
-export function checkLogin(req: Request, res: Response, next: NextFunction) {
+export const checkLogin = (req: Request, res: Response, next: NextFunction) => {
   if (!req.headers['x-user-id']) {
     return res.status(401).send('not login')
   }
   next()
 }
 
-export async function init() {
+export const init = async () => {
   await initGeneral()
   await initRemoveConsumerGroup()
   await initUnreadConsumerGroup()

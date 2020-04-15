@@ -37,7 +37,7 @@ type Send = {
   room: string
 }
 
-export async function sendMessage(user: string, data: Send) {
+export const sendMessage = async (user: string, data: Send) => {
   const message = escape(trim(data.message))
   const room = escape(trim(data.room))
   // todo: send bad request
@@ -77,7 +77,7 @@ type IineMessage = {
   id: string
 }
 
-export async function iine(user: string, data: IineMessage) {
+export const iine = async (user: string, data: IineMessage) => {
   const target = await db.collections.messages.findOne({
     _id: new ObjectID(data.id)
   })
@@ -105,7 +105,7 @@ type ModifyMessage = {
   message: string
 }
 
-export async function modifyMessage(user: string, data: ModifyMessage) {
+export const modifyMessage = async (user: string, data: ModifyMessage) => {
   const message = escape(trim(data.message))
   const id = escape(trim(data.id))
   // todo: send bad request
@@ -159,7 +159,7 @@ type GetMessages = {
   id?: string
 }
 
-export async function getMessagesFromRoom(user: string, data: GetMessages) {
+export const getMessagesFromRoom = async (user: string, data: GetMessages) => {
   const room = escape(trim(data.room))
   // todo: send bad request
   if (isEmpty(room)) {
@@ -195,7 +195,7 @@ type EnterRoom = {
   name?: string
 }
 
-export async function enterRoom(user: string, data: EnterRoom) {
+export const enterRoom = async (user: string, data: EnterRoom) => {
   let room: db.Room = null
   if (data.id) {
     const id = escape(trim(data.id))
@@ -231,7 +231,7 @@ type ReadMessage = {
   room: string
 }
 
-export async function readMessage(user: string, data: ReadMessage) {
+export const readMessage = async (user: string, data: ReadMessage) => {
   await db.collections.enter.updateOne(
     {
       userId: new ObjectID(user),

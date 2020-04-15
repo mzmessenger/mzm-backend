@@ -5,11 +5,11 @@ import * as db from '../lib/db'
 import { createIconPath } from '../lib/utils'
 import { Message } from '../types'
 
-export async function saveMessage(
+export const saveMessage = async (
   message: string,
   roomId: string,
   userId: string
-) {
+) => {
   const insert: db.Message = {
     message: message,
     roomId: new ObjectID(roomId),
@@ -22,10 +22,10 @@ export async function saveMessage(
   return await db.collections.messages.insertOne(insert)
 }
 
-export async function getMessages(
+export const getMessages = async (
   roomId: string,
   thresholdId?: string
-): Promise<{ existHistory: boolean; messages: Message[] }> {
+): Promise<{ existHistory: boolean; messages: Message[] }> => {
   const query: Object[] = [
     {
       $match: { roomId: new ObjectID(roomId) }

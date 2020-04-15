@@ -8,11 +8,11 @@ import { initConsumerGroup, createParser, consumeGroup } from './common'
 
 const UNREAD_GROUP = 'group:remove:user'
 
-export async function initUnreadConsumerGroup() {
+export const initUnreadConsumerGroup = async () => {
   await initConsumerGroup(UNREAD_STREAM, UNREAD_GROUP)
 }
 
-export async function increment(ackid: string, messages: string[]) {
+export const increment = async (ackid: string, messages: string[]) => {
   const queue = JSON.parse(messages[1]) as UnreadQueue
 
   await db.collections.enter.updateMany(
@@ -24,7 +24,7 @@ export async function increment(ackid: string, messages: string[]) {
   logger.info('[unread:increment]', queue.roomId)
 }
 
-export async function consumeUnread() {
+export const consumeUnread = async () => {
   const parser = createParser(increment)
   await consumeGroup(UNREAD_GROUP, 'consume-backend', UNREAD_STREAM, parser)
 }

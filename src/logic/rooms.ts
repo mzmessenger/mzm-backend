@@ -3,7 +3,7 @@ import * as db from '../lib/db'
 import logger from '../lib/logger'
 import { GENERAL_ROOM_NAME } from '../config'
 
-export async function initGeneral() {
+export const initGeneral = async () => {
   await db.collections.rooms.updateOne(
     {
       name: GENERAL_ROOM_NAME
@@ -13,7 +13,7 @@ export async function initGeneral() {
   )
 }
 
-export async function enterRoom(userId: ObjectID, roomId: ObjectID) {
+export const enterRoom = async (userId: ObjectID, roomId: ObjectID) => {
   const enter: db.Enter = {
     userId: userId,
     roomId: roomId
@@ -27,10 +27,10 @@ export async function enterRoom(userId: ObjectID, roomId: ObjectID) {
   )
 }
 
-export async function creatRoom(
+export const creatRoom = async (
   userId: ObjectID,
   name: string
-): Promise<db.Room> {
+): Promise<db.Room> => {
   const createdBy = userId.toHexString()
   const room: db.Room = { name, createdBy }
   const inserted = await db.collections.rooms.insertOne(room)
