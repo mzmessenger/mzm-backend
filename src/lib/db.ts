@@ -16,13 +16,13 @@ export const collections: {
   removed: null
 }
 
-export enum COLLECTION_NAMES {
-  ROOMS = 'rooms',
-  USERS = 'users',
-  ENTER = 'enter',
-  MESSAGES = 'messages',
-  REMOVED = 'removed'
-}
+export const COLLECTION_NAMES = {
+  ROOMS: 'rooms',
+  USERS: 'users',
+  ENTER: 'enter',
+  MESSAGES: 'messages',
+  REMOVED: 'removed'
+} as const
 
 let connection: MongoClient = null
 
