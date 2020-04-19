@@ -46,6 +46,13 @@ app.post(
   iconUpload.single('icon'),
   wrap(icon.uploadUserIcon)
 )
+app.get('/api/icon/rooms/:roomname/:version', streamWrap(icon.getRoomIcon))
+app.post(
+  '/api/icon/rooms/:roomname',
+  checkLogin,
+  iconUpload.single('icon'),
+  wrap(icon.uploadRoomIcon)
+)
 
 app.post('/api/internal/socket', jsonParser, wrap(internal.socket))
 

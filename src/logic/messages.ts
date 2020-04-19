@@ -2,7 +2,7 @@ import { ObjectID } from 'mongodb'
 import unescape from 'validator/lib/unescape'
 import { MESSAGE_LIMIT } from '../config'
 import * as db from '../lib/db'
-import { createIconPath } from '../lib/utils'
+import { createUserIconPath } from '../lib/utils'
 import { Message } from '../types'
 
 export const saveMessage = async (
@@ -10,7 +10,7 @@ export const saveMessage = async (
   roomId: string,
   userId: string
 ) => {
-  const insert: db.Message = {
+  const insert: Omit<db.Message, '_id'> = {
     message: message,
     roomId: new ObjectID(roomId),
     userId: new ObjectID(userId),
@@ -64,7 +64,7 @@ export const getMessages = async (
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt ? doc.updatedAt : null,
       userAccount: user ? user.account : null,
-      icon: createIconPath(user?.account, user?.icon?.version)
+      icon: createUserIconPath(user?.account, user?.icon?.version)
     })
   }
   return { existHistory: messages.length >= MESSAGE_LIMIT, messages }

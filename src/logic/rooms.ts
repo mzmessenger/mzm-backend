@@ -14,7 +14,7 @@ export const initGeneral = async () => {
 }
 
 export const enterRoom = async (userId: ObjectID, roomId: ObjectID) => {
-  const enter: db.Enter = {
+  const enter: Pick<db.Enter, 'userId' | 'roomId'> = {
     userId: userId,
     roomId: roomId
   }
@@ -32,7 +32,7 @@ export const creatRoom = async (
   name: string
 ): Promise<db.Room> => {
   const createdBy = userId.toHexString()
-  const room: db.Room = { name, createdBy }
+  const room: Pick<db.Room, 'name' | 'createdBy'> = { name, createdBy }
   const inserted = await db.collections.rooms.insertOne(room)
   await enterRoom(userId, inserted.insertedId)
   const id = inserted.insertedId.toHexString()

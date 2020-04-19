@@ -5,7 +5,7 @@ import trim from 'validator/lib/trim'
 import isEmpty from 'validator/lib/isEmpty'
 import { SendMessage } from '../../types'
 import * as db from '../../lib/db'
-import { createIconPath } from '../../lib/utils'
+import { createUserIconPath } from '../../lib/utils'
 import {
   addMessageQueue,
   addQueueToUsers,
@@ -60,7 +60,7 @@ export const sendMessage = async (user: string, data: Send) => {
       updated: false,
       createdAt: new Date(Date.now()),
       updatedAt: null,
-      icon: createIconPath(u.account, u.icon?.version)
+      icon: createUserIconPath(u.account, u.icon?.version)
     },
     room: room
   }
@@ -144,7 +144,7 @@ export const modifyMessage = async (user: string, data: ModifyMessage) => {
       updated: true,
       createdAt: from.createdAt,
       updatedAt: updatedAt,
-      icon: createIconPath(u.account, u.icon?.version)
+      icon: createUserIconPath(u.account, u.icon?.version)
     },
     room: from.roomId.toHexString()
   }
@@ -165,7 +165,7 @@ export const getMessagesFromRoom = async (user: string, data: GetMessages) => {
   if (isEmpty(room)) {
     return
   }
-  const filter: db.Enter = {
+  const filter: Pick<db.Enter, 'userId' | 'roomId'> = {
     userId: new ObjectID(user),
     roomId: new ObjectID(room)
   }
