@@ -1,7 +1,5 @@
 import { promisify } from 'util'
-import crypto from 'crypto'
 import { Request } from 'express'
-import escape from 'validator/lib/escape'
 import axios from 'axios'
 import { ObjectID } from 'mongodb'
 import { NotFound, BadRequest } from '../lib/errors'
@@ -11,9 +9,9 @@ import * as db from '../lib/db'
 import logger from '../lib/logger'
 import * as config from '../config'
 import { StreamWrapResponse } from '../types'
+import { isValidMimetype, createVersion } from './internal/icon'
 
 const sizeOf = promisify(require('image-size'))
-const randomBytes = promisify(crypto.randomBytes)
 
 const returnIconStream = async (key: string) => {
   const head = await storage.headObject({ Key: key })
@@ -31,9 +29,9 @@ const returnIconStream = async (key: string) => {
 }
 
 export const getUserIcon = async (req: Request): StreamWrapResponse => {
-  const account = escape(req.params.account)
+  const account = popParam(req.params.account)
   if (!account) {
-    throw new NotFound('not found')
+    throw new BadRequest(`no account`)
   }
   const version = popParam(req.params.version)
   const user = await db.collections.users.findOne({ account: account })
@@ -72,15 +70,6 @@ type MulterFile = {
   size: number
   filename: string
   path: string
-}
-
-const isValidMimetype = (mimetype: string) => {
-  return mimetype === 'image/png' || mimetype !== 'image/jpeg'
-}
-
-const createVersion = async () => {
-  const version = (await randomBytes(12)).toString('hex')
-  return version
 }
 
 export const uploadUserIcon = async (req: Request & { file: MulterFile }) => {

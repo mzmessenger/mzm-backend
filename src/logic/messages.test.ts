@@ -51,9 +51,9 @@ test('getMessages', async () => {
   await db.collections.users.insertOne({ _id: userId, account })
   const roomId = new ObjectID()
 
-  const insert: db.Message[] = []
+  const insert: Omit<db.Message, '_id'>[] = []
   for (let i = 0; i < MESSAGE_LIMIT + overNum; i++) {
-    const message: db.Message = {
+    const message: Omit<db.Message, '_id'> = {
       message: `${i}-message`,
       roomId,
       userId,
@@ -105,9 +105,9 @@ test('getMessages just', async () => {
   await db.collections.users.insertOne({ _id: userId, account })
   const roomId = new ObjectID()
 
-  const insert: db.Message[] = []
+  const insert: Omit<db.Message, '_id'>[] = []
   for (let i = 0; i < MESSAGE_LIMIT * 2; i++) {
-    const message: db.Message = {
+    const message: Omit<db.Message, '_id'> = {
       message: `${i}-message`,
       roomId,
       userId,

@@ -67,11 +67,15 @@ test('getUsers', async () => {
   const overNum = 4
 
   const users: db.User[] = []
-  const insert: db.Enter[] = []
+  const insert: Omit<db.Enter, '_id'>[] = []
   for (let i = 0; i < USER_LIMIT + overNum; i++) {
     const userId = new ObjectID()
     const user: db.User = { _id: userId, account: `account-${i}` }
-    const enter: db.Enter = { roomId, userId, unreadCounter: 0 }
+    const enter: Omit<db.Enter, '_id'> = {
+      roomId,
+      userId,
+      unreadCounter: 0
+    }
     insert.push(enter)
     // 削除済みユーザーのテストのため歯抜けにする
     if (i % 2 === 0) {

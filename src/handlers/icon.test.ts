@@ -10,8 +10,8 @@ import sizeOf from 'image-size'
 import { mongoSetup, createRequest, getMockType } from '../../jest/testUtil'
 import * as db from '../lib/db'
 import * as storage from '../lib/storage'
-import { MAX_USER_ICON_SIZE } from '../config'
-import { BadRequest } from '../lib/errors'
+import * as config from '../config'
+import { BadRequest, NotFound } from '../lib/errors'
 import * as icon from './icon'
 
 let mongoServer = null
@@ -33,7 +33,7 @@ afterAll(async () => {
 
 test('getUserIcon from storage', async () => {
   const userId = new ObjectID()
-  const account = 'aaa'
+  const account = userId.toHexString()
   const version = '12345'
 
   await db.collections.users.insertOne({
@@ -74,13 +74,15 @@ test('getUserIcon from storage', async () => {
 })
 
 test.each([
-  ['bbb', null, '1234'],
-  ['ccc', '1234', '4321']
+  [null, '1234'], // no version
+  ['1234', '4321'] // different version
 ])(
   'getUserIcon from identicon (user: %s, icon version: %s, request icon version: %s)',
-  async (account, iconVersion, requestVersion) => {
+  async (iconVersion, requestVersion) => {
+    const id = new ObjectID()
+    const account = id.toHexString()
     const user: db.User = {
-      _id: new ObjectID(),
+      _id: id,
       account
     }
     if (iconVersion) {
@@ -116,6 +118,20 @@ test.each([
     expect(res.stream).toStrictEqual(readableStream)
   }
 )
+
+test('getUserIcon BadRequest: no account', async () => {
+  expect.assertions(1)
+
+  const version = '12345'
+
+  const req = createRequest(null, { params: { account: null, version } })
+
+  try {
+    await icon.getUserIcon(req)
+  } catch (e) {
+    expect(e instanceof BadRequest).toStrictEqual(true)
+  }
+})
 
 test('uploadUserIcon', async () => {
   const userId = new ObjectID()
@@ -155,50 +171,12 @@ test('uploadUserIcon', async () => {
   expect(res.version).toStrictEqual(user.icon.version)
 })
 
-test.each([['image/png'], ['image/jpeg']])(
-  'uploadUserIcon: success file type (%s)',
-  async (mimetype) => {
-    const userId = new ObjectID()
-
-    await db.collections.users.insertOne({
-      _id: userId,
-      account: userId.toString()
-    })
-
-    const file = {
-      key: 'filekey',
-      mimetype: mimetype,
-      originalname: 'fileoriginalname.png',
-      size: 1,
-      filename: 'filename.png',
-      path: '/path/to/file'
-    }
-
-    const sizeOfMock = getMockType(sizeOf)
-    sizeOfMock.mockImplementation((path, cb) => {
-      cb(null, { width: 100, height: 100 })
-    })
-
-    const req = createRequest(userId, { file })
-
-    const res = await icon.uploadUserIcon(req as any)
-
-    const user = await db.collections.users.findOne({ _id: userId })
-    expect(typeof user.icon.version).toStrictEqual('string')
-    expect(res.version).toStrictEqual(user.icon.version)
-  }
-)
-
-test.each([['image/gif', 'image/svg+xml']])(
+test.each([['image/gif'], ['image/svg+xml']])(
   'uploadUserIcon: fail file type (%s)',
   async (mimetype) => {
     expect.assertions(1)
-    const userId = new ObjectID()
 
-    await db.collections.users.insertOne({
-      _id: userId,
-      account: userId.toString()
-    })
+    const userId = new ObjectID()
 
     const file = {
       key: 'filekey',
@@ -221,12 +199,8 @@ test.each([['image/gif', 'image/svg+xml']])(
 
 test('uploadUserIcon validation: size over', async () => {
   expect.assertions(1)
-  const userId = new ObjectID()
 
-  await db.collections.users.insertOne({
-    _id: userId,
-    account: userId.toString()
-  })
+  const userId = new ObjectID()
 
   const file = {
     key: 'filekey',
@@ -239,7 +213,10 @@ test('uploadUserIcon validation: size over', async () => {
 
   const sizeOfMock = getMockType(sizeOf)
   sizeOfMock.mockImplementation((path, cb) => {
-    cb(null, { width: MAX_USER_ICON_SIZE + 1, height: 100 })
+    cb(null, {
+      width: config.icon.MAX_USER_ICON_SIZE + 1,
+      height: config.icon.MAX_USER_ICON_SIZE + 1
+    })
   })
 
   const req = createRequest(userId, { file })
@@ -253,12 +230,8 @@ test('uploadUserIcon validation: size over', async () => {
 
 test('uploadUserIcon validation: not square', async () => {
   expect.assertions(1)
-  const userId = new ObjectID()
 
-  await db.collections.users.insertOne({
-    _id: userId,
-    account: userId.toString()
-  })
+  const userId = new ObjectID()
 
   const file = {
     key: 'filekey',
@@ -271,7 +244,227 @@ test('uploadUserIcon validation: not square', async () => {
 
   const sizeOfMock = getMockType(sizeOf)
   sizeOfMock.mockImplementation((path, cb) => {
-    cb(null, { width: 101, height: 100 })
+    cb(null, {
+      width: config.icon.MAX_USER_ICON_SIZE - 1,
+      height: config.icon.MAX_USER_ICON_SIZE - 2
+    })
+  })
+
+  const req = createRequest(userId, { file })
+
+  try {
+    await icon.uploadUserIcon(req as any)
+  } catch (e) {
+    expect(e instanceof BadRequest).toStrictEqual(true)
+  }
+})
+
+test('getRoomIcon', async () => {
+  const roomId = new ObjectID()
+  const name = roomId.toHexString()
+  const version = '12345'
+
+  await db.collections.rooms.insertOne({
+    _id: roomId,
+    name,
+    createdBy: null,
+    icon: { key: 'iconkey', version }
+  })
+
+  const req = createRequest(null, { params: { roomname: name, version } })
+
+  const headObjectMock = getMockType(storage.headObject)
+  const headers = {
+    ETag: 'etag',
+    ContentType: 'image/png',
+    ContentLength: 12345,
+    LastModified: new Date(2020, 0, 1),
+    CacheControl: 'max-age=604800'
+  } as const
+  headObjectMock.mockResolvedValueOnce(headers)
+  const getObjectMock = getMockType(storage.getObject)
+  const readableStream = new Readable()
+  getObjectMock.mockReturnValueOnce({
+    createReadStream: () => readableStream
+  })
+
+  const res = await icon.getRoomIcon(req)
+
+  expect(headObjectMock.mock.calls.length).toStrictEqual(1)
+  expect(getObjectMock.mock.calls.length).toStrictEqual(1)
+  expect(res.headers.ETag).toStrictEqual(headers.ETag)
+  expect(res.headers['Content-Type']).toStrictEqual(headers.ContentType)
+  expect(res.headers['Content-Length']).toStrictEqual(headers.ContentLength)
+  expect((res.headers['Last-Modified'] as Date).getTime()).toStrictEqual(
+    headers.LastModified.getTime()
+  )
+  expect(res.headers['Cache-Control']).toStrictEqual(headers.CacheControl)
+  expect(res.stream).toStrictEqual(readableStream)
+})
+
+test('getRoomIcon BadRequest: no room name', async () => {
+  expect.assertions(1)
+
+  const version = '12345'
+
+  const req = createRequest(null, { params: { roomname: null, version } })
+
+  try {
+    await icon.getRoomIcon(req)
+  } catch (e) {
+    expect(e instanceof BadRequest).toStrictEqual(true)
+  }
+})
+
+test('getRoomIcon NotFound: different version', async () => {
+  expect.assertions(1)
+
+  const roomId = new ObjectID()
+  const name = roomId.toHexString()
+  const version = '12345'
+
+  await db.collections.rooms.insertOne({
+    _id: roomId,
+    name: name,
+    createdBy: null,
+    icon: { key: 'iconkey', version }
+  })
+
+  const req = createRequest(null, {
+    params: { roomname: name, version: '54321' }
+  })
+
+  try {
+    await icon.getRoomIcon(req)
+  } catch (e) {
+    expect(e instanceof NotFound).toStrictEqual(true)
+  }
+})
+
+test('uploadRoomIcon', async () => {
+  const roomId = new ObjectID()
+  const name = roomId.toHexString()
+
+  await db.collections.rooms.insertOne({
+    _id: roomId,
+    name,
+    createdBy: null
+  })
+
+  const putObjectMock = getMockType(storage.putObject)
+  putObjectMock.mockResolvedValueOnce({})
+
+  const sizeOfMock = getMockType(sizeOf)
+  sizeOfMock.mockImplementation((path, cb) => {
+    cb(null, {
+      width: config.icon.MAX_USER_ICON_SIZE,
+      height: config.icon.MAX_USER_ICON_SIZE
+    })
+  })
+  const createBodyFromFilePath = getMockType(storage.createBodyFromFilePath)
+  const readableStream = new Readable()
+  createBodyFromFilePath.mockReturnValue(readableStream)
+
+  const file = {
+    key: 'filekey',
+    mimetype: 'image/png',
+    originalname: 'fileoriginalname.png',
+    size: 1,
+    filename: 'filename.png',
+    path: '/path/to/file'
+  }
+
+  const req = createRequest(new ObjectID(), {
+    file,
+    params: { roomname: name }
+  })
+
+  const res = await icon.uploadRoomIcon(req as any)
+
+  const room = await db.collections.rooms.findOne({ _id: roomId })
+
+  expect(typeof room.icon.version).toStrictEqual('string')
+  expect(res.version).toStrictEqual(room.icon.version)
+})
+
+test.each([['image/gif'], ['image/svg+xml']])(
+  'uploadRoomIcon: fail file type (%s)',
+  async (mimetype) => {
+    expect.assertions(1)
+
+    const name = new ObjectID().toHexString()
+
+    const file = {
+      key: 'filekey',
+      mimetype: mimetype,
+      originalname: 'fileoriginalname.png',
+      size: 1,
+      filename: 'filename.png',
+      path: '/path/to/file'
+    }
+
+    const req = createRequest(new ObjectID(), {
+      file,
+      params: { roomname: name }
+    })
+
+    try {
+      await icon.uploadRoomIcon(req as any)
+    } catch (e) {
+      expect(e instanceof BadRequest).toStrictEqual(true)
+    }
+  }
+)
+
+test('uploadRoomIcon: validation: size over ', async () => {
+  expect.assertions(1)
+
+  const file = {
+    key: 'filekey',
+    mimetype: 'image/png',
+    originalname: 'fileoriginalname.png',
+    size: 1,
+    filename: 'filename.png',
+    path: '/path/to/file'
+  }
+
+  const sizeOfMock = getMockType(sizeOf)
+  sizeOfMock.mockImplementation((path, cb) => {
+    cb(null, {
+      width: config.icon.MAX_ROOM_ICON_SIZE + 1,
+      height: config.icon.MAX_ROOM_ICON_SIZE + 1
+    })
+  })
+
+  const req = createRequest(new ObjectID(), { file })
+
+  try {
+    await icon.uploadRoomIcon(req as any)
+  } catch (e) {
+    expect(e instanceof BadRequest).toStrictEqual(true)
+  }
+})
+
+test('uploadUserIcon validation: not square', async () => {
+  expect.assertions(1)
+
+  const userId = new ObjectID()
+
+  const file = {
+    key: 'filekey',
+    mimetype: 'image/png',
+    originalname: 'fileoriginalname.png',
+    size: 1,
+    filename: 'filename.png',
+    path: '/path/to/file'
+  }
+
+  const sizeOfMock = getMockType(sizeOf)
+  sizeOfMock.mockImplementation((path, cb) => {
+    cb(null, {
+      width: config.icon.MAX_ROOM_ICON_SIZE - 1,
+      height: config.icon.MAX_ROOM_ICON_SIZE - 2
+    })
   })
 
   const req = createRequest(userId, { file })
