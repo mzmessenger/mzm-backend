@@ -15,7 +15,10 @@ export const popParam = (param: string): string => {
   return escape(trim(param))
 }
 
-export const createIconPath = (account: string, version?: string): string => {
+export const createUserIconPath = (
+  account: string,
+  version?: string
+): string => {
   if (!account) {
     return null
   }

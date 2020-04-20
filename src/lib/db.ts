@@ -16,13 +16,13 @@ export const collections: {
   removed: null
 }
 
-export enum COLLECTION_NAMES {
-  ROOMS = 'rooms',
-  USERS = 'users',
-  ENTER = 'enter',
-  MESSAGES = 'messages',
-  REMOVED = 'removed'
-}
+export const COLLECTION_NAMES = {
+  ROOMS: 'rooms',
+  USERS: 'users',
+  ENTER: 'enter',
+  MESSAGES: 'messages',
+  REMOVED: 'removed'
+} as const
 
 let connection: MongoClient = null
 
@@ -58,13 +58,17 @@ export const close = async () => {
 }
 
 export type Room = {
-  _id?: ObjectId
+  _id: ObjectId
   name: string
   createdBy: string
+  icon?: {
+    key: string
+    version: string
+  }
 }
 
 export type Enter = {
-  _id?: ObjectId
+  _id: ObjectId
   roomId: ObjectId
   userId: ObjectId
   unreadCounter?: number
@@ -80,14 +84,14 @@ export type User = {
 }
 
 export type Removed = {
-  id?: ObjectId
+  id: ObjectId
   account: string
   originId: ObjectId
   enter: ObjectId[]
 }
 
 export type Message = {
-  _id?: ObjectId
+  _id: ObjectId
   message: string
   iine: number
   roomId: ObjectId

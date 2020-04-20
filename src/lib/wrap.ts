@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
+import { StreamWrapResponse } from '../types'
 
 interface WrapFn {
   (req: Request): Promise<object | void>
@@ -17,7 +18,7 @@ export const wrap = (fn: WrapFn) => {
 }
 
 interface StreamWrapFn {
-  (req: Request): Promise<{ headers: object; stream: NodeJS.ReadableStream }>
+  (req: Request): StreamWrapResponse
 }
 
 export const streamWrap = (fn: StreamWrapFn) => {

@@ -1,6 +1,7 @@
 export type Room = {
   id: string
   name: string
+  iconUrl: string
   unread: number
 }
 
@@ -63,3 +64,8 @@ export type SendMessage =
 export type UnreadQueue = {
   roomId: string
 }
+
+export type StreamWrapResponse = Promise<{
+  headers: { [key: string]: string | number | Date }
+  stream: NodeJS.ReadableStream
+}>

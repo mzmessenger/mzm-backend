@@ -11,7 +11,7 @@ import {
 import { BadRequest } from '../lib/errors'
 import { getRequestUserId } from '../lib/utils'
 import * as db from '../lib/db'
-import { popParam, createIconPath } from '../lib/utils'
+import { popParam, createUserIconPath } from '../lib/utils'
 import { enterRoom as enterRoomLogic, creatRoom } from '../logic/rooms'
 
 export const createRoom = async (
@@ -135,7 +135,7 @@ export const getUsers = async (
     if (doc.user && doc.user[0]) {
       const [u] = doc.user
       user.account = u.account ? u.account : null
-      user.icon = createIconPath(u?.account, u?.icon?.version)
+      user.icon = createUserIconPath(u?.account, u?.icon?.version)
     }
     users.push(user)
   }

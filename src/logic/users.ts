@@ -57,9 +57,13 @@ export const getRooms = async (userId: string): Promise<SendRoom[]> => {
   const rooms: SendRoom[] = []
   for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
     const room = doc.room[0]
+    const iconUrl = room.icon
+      ? `/api/icon/rooms/${room.name}/${room.icon.version}`
+      : null
     rooms.push({
       id: room._id.toHexString(),
       name: room.name,
+      iconUrl,
       unread: doc.unreadCounter ? doc.unreadCounter : 0
     })
   }

@@ -67,16 +67,18 @@ export const UNREAD_STREAM = 'stream:unread'
 
 export const MAX_ROOM_NAME_LENGTH = 80
 
-export const MAX_USER_ICON_SIZE = 400
-
-export const USER_ICON_PREFIX = 'usericon/'
+export const icon = {
+  MAX_USER_ICON_SIZE: 400,
+  USER_ICON_PREFIX: 'usericon/',
+  MAX_ROOM_ICON_SIZE: 400,
+  ROOM_ICON_PREFIX: 'roomicon/'
+} as const
 
 export const MULTER_PATH = '/tmp'
 
-export const AWS_BUCKET = process.env.AWS_BUCKET
-
-export const AWS_REGION = process.env.AWS_REGION
-
-export const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID
-
-export const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY
+export const aws = {
+  AWS_BUCKET: process.env.AWS_BUCKET,
+  AWS_REGION: process.env.AWS_REGION,
+  AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+  AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY
+} as const

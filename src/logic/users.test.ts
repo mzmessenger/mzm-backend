@@ -89,7 +89,7 @@ test('getAllUserIdsInRoom', async () => {
   const roomId = new ObjectID()
   const users = [new ObjectID(), new ObjectID(), new ObjectID()]
   const userIdStrs = users.map((user) => user.toHexString())
-  const enter: db.Enter[] = users.map((user) => {
+  const enter: Omit<db.Enter, '_id'>[] = users.map((user) => {
     return {
       roomId: roomId,
       userId: user
