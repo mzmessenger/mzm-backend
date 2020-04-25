@@ -5,7 +5,7 @@ import trim from 'validator/lib/trim'
 import isEmpty from 'validator/lib/isEmpty'
 import { SendMessage } from '../../types'
 import * as db from '../../lib/db'
-import { createUserIconPath } from '../../lib/utils'
+import { createUserIconPath, createRoomIconPath } from '../../lib/utils'
 import {
   addMessageQueue,
   addQueueToUsers,
@@ -201,7 +201,7 @@ export const enterRoom = async (user: string, data: EnterRoom) => {
     const id = escape(trim(data.id))
     room = await db.collections.rooms.findOne({ _id: new ObjectID(id) })
   } else if (data.name) {
-    const name = escape(trim(data.name))
+    const name = escape(trim(decodeURIComponent(data.name)))
     const found = await db.collections.rooms.findOne({ name: name })
 
     if (found) {
@@ -222,7 +222,8 @@ export const enterRoom = async (user: string, data: EnterRoom) => {
     user,
     cmd: 'rooms:enter:success',
     id: room._id.toHexString(),
-    name: room.name
+    name: room.name,
+    iconUrl: createRoomIconPath(room)
   }
 }
 
