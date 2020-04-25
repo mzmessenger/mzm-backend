@@ -4,6 +4,7 @@ import { GENERAL_ROOM_NAME } from '../config'
 import { Room as SendRoom } from '../types'
 import logger from '../lib/logger'
 import * as db from '../lib/db'
+import { createRoomIconPath } from '../lib/utils'
 import { enterRoom } from './rooms'
 
 export const isValidAccount = (account: string): boolean => {
@@ -57,13 +58,10 @@ export const getRooms = async (userId: string): Promise<SendRoom[]> => {
   const rooms: SendRoom[] = []
   for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
     const room = doc.room[0]
-    const iconUrl = room.icon
-      ? `/api/icon/rooms/${room.name}/${room.icon.version}`
-      : null
     rooms.push({
       id: room._id.toHexString(),
       name: room.name,
-      iconUrl,
+      iconUrl: createRoomIconPath(room),
       unread: doc.unreadCounter ? doc.unreadCounter : 0
     })
   }

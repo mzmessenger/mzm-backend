@@ -28,3 +28,15 @@ export const createUserIconPath = (
   }
   return icon
 }
+
+export const createRoomIconPath = (room: import('./db').Room): string => {
+  if (!room) {
+    return null
+  }
+
+  const icon = room.icon
+    ? `/api/icon/rooms/${room.name}/${room.icon.version}`
+    : null
+
+  return icon
+}
