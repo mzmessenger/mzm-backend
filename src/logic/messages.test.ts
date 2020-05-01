@@ -48,7 +48,7 @@ test('getMessages', async () => {
   const overNum = 2
   const userId = new ObjectID()
   const account = 'test'
-  await db.collections.users.insertOne({ _id: userId, account })
+  await db.collections.users.insertOne({ _id: userId, account, roomOrder: [] })
   const roomId = new ObjectID()
 
   const insert: Omit<db.Message, '_id'>[] = []
@@ -102,7 +102,7 @@ test('getMessages', async () => {
 test('getMessages just', async () => {
   const userId = new ObjectID()
   const account = 'test'
-  await db.collections.users.insertOne({ _id: userId, account })
+  await db.collections.users.insertOne({ _id: userId, account, roomOrder: [] })
   const roomId = new ObjectID()
 
   const insert: Omit<db.Message, '_id'>[] = []

@@ -1,5 +1,6 @@
 import { Request } from 'express'
 import { ObjectID } from 'mongodb'
+import isEmpty from 'validator/lib/isEmpty'
 import { NotFound, BadRequest } from '../lib/errors'
 import { getRequestUserId, popParam } from '../lib/utils'
 import { isValidAccount, initUser } from '../logic/users'
@@ -29,7 +30,13 @@ export const signUp = async (req: Request) => {
 export const getUserInfo = async (req: Request) => {
   const id = getRequestUserId(req)
 
-  const user = await db.collections.users.findOne({ _id: new ObjectID(id) })
+  const user: Pick<
+    db.User,
+    '_id' | 'account' | 'icon'
+  > = await db.collections.users.findOne(
+    { _id: new ObjectID(id) },
+    { projection: { account: 1, icon: 1 } }
+  )
 
   const twitter: string = (req.headers['x-twitter-user-name'] as string) || null
   const github: string = (req.headers['x-github-user-name'] as string) || null
@@ -63,7 +70,7 @@ export const updateAccount = async (req: Request) => {
   }
 
   const userId = new ObjectID(user)
-  const update: db.User = { _id: userId, account }
+  const update: Pick<db.User, 'account'> = { account }
   const updated = await db.collections.users.findOneAndUpdate(
     { _id: userId },
     { $set: update },
@@ -73,4 +80,26 @@ export const updateAccount = async (req: Request) => {
   )
 
   return updated.value
+}
+
+export const sortRooms = async (req: Request) => {
+  const user = getRequestUserId(req)
+  const rooms = popParam(req.body.rooms)
+  if (isEmpty(rooms)) {
+    throw new BadRequest({ reason: 'rooms is empty' })
+  } else if (!Array.isArray(rooms)) {
+    throw new BadRequest({ reason: 'rooms is not array' })
+  }
+  const roomOrder = []
+  for (const room of rooms) {
+    if (typeof room !== 'string') {
+      throw new BadRequest({ reason: `${room} is not string` })
+    }
+    roomOrder.push(room)
+  }
+
+  db.collections.users.updateOne(
+    { _id: new ObjectID(user) },
+    { $set: { roomOrder } }
+  )
 }

@@ -81,6 +81,7 @@ export type User = {
     key: string
     version: string
   }
+  roomOrder: string[]
 }
 
 export type Removed = {

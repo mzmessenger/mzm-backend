@@ -44,7 +44,11 @@ test('signUp already exist', async () => {
   const created = new ObjectID()
   const account = 'aaa'
 
-  await db.collections.users.insertOne({ _id: created, account: account })
+  await db.collections.users.insertOne({
+    _id: created,
+    account: account,
+    roomOrder: []
+  })
 
   const body = { account }
   const req = createRequest(new ObjectID(), { body })

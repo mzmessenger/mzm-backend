@@ -10,6 +10,7 @@ export const initConsumerGroup = async (stream: string, groupName: string) => {
       await redis.xgroup('create', stream, groupName, '$', 'MKSTREAM')
     } catch (e) {
       logger.error(`failed creating xgroup (${stream}, ${groupName}):`, e)
+      throw e
     }
   }
 }

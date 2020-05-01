@@ -29,7 +29,7 @@ test('getUserInfo', async () => {
   const userId = new ObjectID()
   const account = 'aaa'
 
-  await db.collections.users.insertOne({ _id: userId, account })
+  await db.collections.users.insertOne({ _id: userId, account, roomOrder: [] })
 
   const body = { account }
   const req = createRequest(userId, { body })
@@ -48,7 +48,7 @@ test('getUserInfo before signUp', async () => {
   const userId = new ObjectID()
   const account = null
 
-  await db.collections.users.insertOne({ _id: userId, account })
+  await db.collections.users.insertOne({ _id: userId, account, roomOrder: [] })
 
   const req = createRequest(userId, {})
 

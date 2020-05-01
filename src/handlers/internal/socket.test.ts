@@ -30,7 +30,11 @@ test('sendMessage', async () => {
   const roomId = new ObjectID()
   const userId = new ObjectID()
 
-  await db.collections.users.insertOne({ _id: userId, account: 'test' })
+  await db.collections.users.insertOne({
+    _id: userId,
+    account: 'test',
+    roomOrder: []
+  })
 
   const message = 'post'
 
@@ -64,7 +68,11 @@ test('modifyMessage', async () => {
   const userId = new ObjectID()
   const createdAt = new Date()
 
-  const user = db.collections.users.insertOne({ _id: userId, account: 'test' })
+  const user = db.collections.users.insertOne({
+    _id: userId,
+    account: 'test',
+    roomOrder: []
+  })
 
   const message = db.collections.messages.insertOne({
     roomId,
@@ -106,7 +114,11 @@ test('readMessage', async () => {
   const userId = new ObjectID()
 
   await Promise.all([
-    db.collections.users.insertOne({ _id: userId, account: 'test' }),
+    db.collections.users.insertOne({
+      _id: userId,
+      account: 'test',
+      roomOrder: []
+    }),
     db.collections.enter.insertOne({ userId, roomId, unreadCounter: 10 })
   ])
 

@@ -39,6 +39,7 @@ test('getUserIcon from storage', async () => {
   await db.collections.users.insertOne({
     _id: userId,
     account,
+    roomOrder: [],
     icon: { key: 'iconkey', version }
   })
 
@@ -83,7 +84,8 @@ test.each([
     const account = id.toHexString()
     const user: db.User = {
       _id: id,
-      account
+      account,
+      roomOrder: []
     }
     if (iconVersion) {
       user.icon = { key: 'iconkey', version: iconVersion }
@@ -138,7 +140,8 @@ test('uploadUserIcon', async () => {
 
   await db.collections.users.insertOne({
     _id: userId,
-    account: userId.toString()
+    account: userId.toString(),
+    roomOrder: []
   })
 
   const putObjectMock = getMockType(storage.putObject)
