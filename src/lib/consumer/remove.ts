@@ -4,8 +4,8 @@ import redis from '../redis'
 import logger from '../logger'
 import { initConsumerGroup, createParser, consumeGroup } from './common'
 
-const REMOVE_STREAM = 'stream:remove:user:chat'
-const REMOVE_GROUP = 'group:remove:user'
+const REMOVE_STREAM = 'stream:backend:remove:user'
+const REMOVE_GROUP = 'group:backend:remove:user'
 
 export const initRemoveConsumerGroup = async () => {
   await initConsumerGroup(REMOVE_STREAM, REMOVE_GROUP)

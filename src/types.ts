@@ -22,6 +22,7 @@ export type SendMessage =
       user: string
       cmd: 'rooms'
       rooms: Room[]
+      roomOrder: string[]
     }
   | {
       user: string
@@ -41,6 +42,7 @@ export type SendMessage =
       cmd: 'rooms:enter:success'
       id: string
       name: string
+      iconUrl: string
     }
   | {
       user: string
@@ -59,6 +61,11 @@ export type SendMessage =
       room: string
       id: string
       iine: number
+    }
+  | {
+      user: string
+      cmd: 'rooms:sort:success'
+      roomOrder: string[]
     }
 
 export type UnreadQueue = {

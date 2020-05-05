@@ -34,7 +34,11 @@ const enterGeneral = async (userId: ObjectID) => {
 
 export const initUser = async (userId: ObjectID, account: string) => {
   const [user] = await Promise.all([
-    db.collections.users.insertOne({ _id: userId, account: account }),
+    db.collections.users.insertOne({
+      _id: userId,
+      account: account,
+      roomOrder: []
+    }),
     enterGeneral(userId)
   ])
   logger.info('[logic/user] initUser', userId, account)

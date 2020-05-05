@@ -27,7 +27,11 @@ test('remove', async () => {
 
   const userId = new ObjectID()
   const roomIds = [new ObjectID(), new ObjectID()]
-  await db.collections.users.insertOne({ _id: userId, account: 'test' })
+  await db.collections.users.insertOne({
+    _id: userId,
+    account: 'test',
+    roomOrder: []
+  })
   const insert = roomIds.map((roomId) => {
     return { userId, roomId }
   })

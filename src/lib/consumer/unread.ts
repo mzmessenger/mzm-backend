@@ -6,7 +6,7 @@ import redis from '../redis'
 import logger from '../logger'
 import { initConsumerGroup, createParser, consumeGroup } from './common'
 
-const UNREAD_GROUP = 'group:remove:user'
+const UNREAD_GROUP = 'group:unread'
 
 export const initUnreadConsumerGroup = async () => {
   await initConsumerGroup(UNREAD_STREAM, UNREAD_GROUP)

@@ -70,7 +70,11 @@ test('getUsers', async () => {
   const insert: Omit<db.Enter, '_id'>[] = []
   for (let i = 0; i < USER_LIMIT + overNum; i++) {
     const userId = new ObjectID()
-    const user: db.User = { _id: userId, account: `account-${i}` }
+    const user: db.User = {
+      _id: userId,
+      account: `account-${i}`,
+      roomOrder: []
+    }
     const enter: Omit<db.Enter, '_id'> = {
       roomId,
       userId,

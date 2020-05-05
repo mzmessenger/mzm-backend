@@ -16,7 +16,8 @@ test('addQueueToUsers', async () => {
   const queue: SendMessage = {
     user: null,
     cmd: 'rooms',
-    rooms: []
+    rooms: [],
+    roomOrder: []
   }
 
   await addQueueToUsers(users, queue)

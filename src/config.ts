@@ -82,3 +82,10 @@ export const aws = {
   AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY
 } as const
+
+export const redis = {
+  options: {
+    host: process.env.REDIS_HOST,
+    enableOfflineQueue: false
+  }
+}

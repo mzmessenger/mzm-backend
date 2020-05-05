@@ -12,7 +12,10 @@ import { BadRequest } from '../lib/errors'
 import { getRequestUserId } from '../lib/utils'
 import * as db from '../lib/db'
 import { popParam, createUserIconPath } from '../lib/utils'
-import { enterRoom as enterRoomLogic, creatRoom } from '../logic/rooms'
+import {
+  enterRoom as enterRoomLogic,
+  createRoom as createRoomLogic
+} from '../logic/rooms'
 
 export const createRoom = async (
   req: Request
@@ -38,7 +41,7 @@ export const createRoom = async (
     return { id: found._id.toHexString(), name: found.name }
   }
 
-  const created = await creatRoom(new ObjectID(user), name)
+  const created = await createRoomLogic(new ObjectID(user), name)
 
   return { id: created._id.toHexString(), name }
 }

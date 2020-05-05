@@ -3,7 +3,7 @@ import escape from 'validator/lib/escape'
 import unescape from 'validator/lib/unescape'
 import trim from 'validator/lib/trim'
 import isEmpty from 'validator/lib/isEmpty'
-import { SendMessage } from '../../types'
+import { SendMessage as SendMessageType } from '../../types'
 import * as db from '../../lib/db'
 import { createUserIconPath, createRoomIconPath } from '../../lib/utils'
 import {
@@ -12,32 +12,63 @@ import {
   addUnreadQueue
 } from '../../lib/provider'
 import { saveMessage, getMessages } from '../../logic/messages'
-import { getAllUserIdsInRoom } from '../../logic/users'
-import { creatRoom } from '../../logic/rooms'
+import {
+  getAllUserIdsInRoom,
+  getRooms as getRoomsLogic
+} from '../../logic/users'
+import { createRoom } from '../../logic/rooms'
 import { enterRoom as logicEnterRoom } from '../../logic/rooms'
+
+export const ReceiveMessageCmd = {
+  CONNECTION: 'socket:connection',
+  ROOMS_GET: 'rooms:get',
+  ROOMS_ENTER: 'rooms:enter',
+  ROOMS_READ: 'rooms:read',
+  ROOMS_SORT: 'rooms:sort',
+  MESSAGE_SEND: 'message:send',
+  MESSAGE_IINE: 'message:iine',
+  MESSAGE_MODIFY: 'message:modify',
+  MESSAGES_ROOM: 'messages:room'
+} as const
 
 export type ReceiveMessage =
   | {
-      cmd: 'socket:connection'
+      cmd: typeof ReceiveMessageCmd.CONNECTION
       payload: { user: string }
     }
-  | {
-      cmd: 'rooms:get'
-    }
-  | Send
+  | { cmd: typeof ReceiveMessageCmd.ROOMS_GET }
+  | SendMessage
   | ModifyMessage
   | IineMessage
   | GetMessages
   | EnterRoom
   | ReadMessage
+  | SortRooms
 
-type Send = {
-  cmd: 'message:send'
+export const getRooms = async (userId: string): Promise<SendMessageType> => {
+  const [user, rooms] = await Promise.all([
+    db.collections.users.findOne(
+      { _id: new ObjectID(userId) },
+      { projection: { roomOrder: 1 } }
+    ),
+    getRoomsLogic(userId)
+  ])
+  const room: SendMessageType = {
+    user: userId,
+    cmd: 'rooms',
+    rooms,
+    roomOrder: user.roomOrder ? user.roomOrder : []
+  }
+  return room
+}
+
+type SendMessage = {
+  cmd: typeof ReceiveMessageCmd.MESSAGE_SEND
   message: string
   room: string
 }
 
-export const sendMessage = async (user: string, data: Send) => {
+export const sendMessage = async (user: string, data: SendMessage) => {
   const message = escape(trim(data.message))
   const room = escape(trim(data.room))
   // todo: send bad request
@@ -48,7 +79,7 @@ export const sendMessage = async (user: string, data: Send) => {
   const u = await db.collections.users.findOne({
     _id: new ObjectID(user)
   })
-  const send: SendMessage = {
+  const send: SendMessageType = {
     user: null,
     cmd: 'message:receive',
     message: {
@@ -73,7 +104,7 @@ export const sendMessage = async (user: string, data: Send) => {
 }
 
 type IineMessage = {
-  cmd: 'message:iine'
+  cmd: typeof ReceiveMessageCmd.MESSAGE_IINE
   id: string
 }
 
@@ -88,7 +119,7 @@ export const iine = async (user: string, data: IineMessage) => {
   )
 
   const users = await getAllUserIdsInRoom(target.roomId.toHexString())
-  const send: SendMessage = {
+  const send: SendMessageType = {
     cmd: 'message:iine',
     iine: (target.iine ? target.iine : 0) + 1,
     room: target.roomId.toHexString(),
@@ -100,7 +131,7 @@ export const iine = async (user: string, data: IineMessage) => {
 }
 
 type ModifyMessage = {
-  cmd: 'message:modify'
+  cmd: typeof ReceiveMessageCmd.MESSAGE_MODIFY
   id: string
   message: string
 }
@@ -132,7 +163,7 @@ export const modifyMessage = async (user: string, data: ModifyMessage) => {
   const u = await db.collections.users.findOne({
     _id: new ObjectID(user)
   })
-  const send: SendMessage = {
+  const send: SendMessageType = {
     user: user,
     cmd: 'message:modify',
     message: {
@@ -154,12 +185,15 @@ export const modifyMessage = async (user: string, data: ModifyMessage) => {
 }
 
 type GetMessages = {
-  cmd: 'messages:room'
+  cmd: typeof ReceiveMessageCmd.MESSAGES_ROOM
   room: string
   id?: string
 }
 
-export const getMessagesFromRoom = async (user: string, data: GetMessages) => {
+export const getMessagesFromRoom = async (
+  user: string,
+  data: GetMessages
+): Promise<SendMessageType> => {
   const room = escape(trim(data.room))
   // todo: send bad request
   if (isEmpty(room)) {
@@ -179,7 +213,7 @@ export const getMessagesFromRoom = async (user: string, data: GetMessages) => {
     id = escape(trim(data.id))
   }
   const { existHistory, messages } = await getMessages(room, id)
-  const send: SendMessage = {
+  const send: SendMessageType = {
     user: user,
     cmd: 'messages:room',
     room,
@@ -190,12 +224,15 @@ export const getMessagesFromRoom = async (user: string, data: GetMessages) => {
 }
 
 type EnterRoom = {
-  cmd: 'rooms:enter'
+  cmd: typeof ReceiveMessageCmd.ROOMS_ENTER
   id?: string
   name?: string
 }
 
-export const enterRoom = async (user: string, data: EnterRoom) => {
+export const enterRoom = async (
+  user: string,
+  data: EnterRoom
+): Promise<SendMessageType> => {
   let room: db.Room = null
   if (data.id) {
     const id = escape(trim(data.id))
@@ -207,7 +244,7 @@ export const enterRoom = async (user: string, data: EnterRoom) => {
     if (found) {
       room = found
     } else {
-      room = await creatRoom(new ObjectID(user), name)
+      room = await createRoom(new ObjectID(user), name)
     }
   }
 
@@ -228,11 +265,15 @@ export const enterRoom = async (user: string, data: EnterRoom) => {
 }
 
 type ReadMessage = {
-  cmd: 'rooms:read'
-  room: string
+  cmd: typeof ReceiveMessageCmd.ROOMS_READ
+  room?: string
 }
 
 export const readMessage = async (user: string, data: ReadMessage) => {
+  if (isEmpty(data.room)) {
+    // todo BadRequest
+    return
+  }
   await db.collections.enter.updateOne(
     {
       userId: new ObjectID(user),
@@ -242,4 +283,32 @@ export const readMessage = async (user: string, data: ReadMessage) => {
   )
 
   await addMessageQueue({ user, cmd: 'rooms:read', room: data.room })
+}
+
+type SortRooms = {
+  cmd: typeof ReceiveMessageCmd.ROOMS_SORT
+  roomOrder?: string[]
+}
+
+export const sortRooms = async (user: string, data: SortRooms) => {
+  if (!data.roomOrder || !Array.isArray(data.roomOrder)) {
+    // todo BadRequest
+    return
+  }
+
+  const roomOrder = []
+  for (const room of data.roomOrder) {
+    if (typeof room !== 'string') {
+      // todo BadRequest
+      return
+    }
+    roomOrder.push(room)
+  }
+
+  await db.collections.users.updateOne(
+    { _id: new ObjectID(user) },
+    { $set: { roomOrder } }
+  )
+
+  await addMessageQueue({ user, cmd: 'rooms:sort:success', roomOrder })
 }

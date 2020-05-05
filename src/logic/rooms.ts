@@ -14,20 +14,28 @@ export const initGeneral = async () => {
 }
 
 export const enterRoom = async (userId: ObjectID, roomId: ObjectID) => {
-  const enter: Pick<db.Enter, 'userId' | 'roomId'> = {
+  const enter: Omit<db.Enter, '_id'> = {
     userId: userId,
-    roomId: roomId
+    roomId: roomId,
+    unreadCounter: 0
   }
-  return await db.collections.enter.findOneAndUpdate(
-    { userId: userId, roomId: roomId },
-    { $set: enter },
-    {
-      upsert: true
-    }
-  )
+
+  await Promise.all([
+    db.collections.enter.findOneAndUpdate(
+      { userId: userId, roomId: roomId },
+      { $set: enter },
+      {
+        upsert: true
+      }
+    ),
+    db.collections.users.findOneAndUpdate(
+      { _id: userId },
+      { $addToSet: { roomOrder: roomId.toHexString() } }
+    )
+  ])
 }
 
-export const creatRoom = async (
+export const createRoom = async (
   userId: ObjectID,
   name: string
 ): Promise<db.Room> => {

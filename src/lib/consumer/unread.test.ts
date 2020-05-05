@@ -29,8 +29,8 @@ test('increment', async () => {
   const maxValue = 100
 
   const userIds = [new ObjectID(), new ObjectID(), new ObjectID()]
-  const users = userIds.map((userId, i) => {
-    return { _id: userId, account: `account-${i}` }
+  const users: db.User[] = userIds.map((userId, i) => {
+    return { _id: userId, account: `account-${i}`, roomOrder: [] }
   })
   await db.collections.users.insertMany(users)
   const roomId = new ObjectID()
