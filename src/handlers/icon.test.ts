@@ -121,6 +121,50 @@ test.each([
   }
 )
 
+test('getUserIcon from identicon: not found on storage', async () => {
+  const id = new ObjectID()
+  const account = id.toHexString()
+  const user: db.User = {
+    _id: id,
+    account,
+    roomOrder: [],
+    icon: {
+      key: 'iconkey',
+      version: '1234'
+    }
+  }
+  await db.collections.users.insertOne(user)
+
+  const headObjectMock = getMockType(storage.headObject)
+  headObjectMock.mockRejectedValueOnce({ statusCode: 404 })
+  const axiosMock = getMockType(axios)
+  const headers = {
+    ETag: 'etag',
+    'Content-Type': 'image/png',
+    'Content-Length': 12345,
+    'Last-Modified': new Date(2020, 0, 1),
+    'Cache-Control': 'max-age=604800'
+  } as const
+  const readableStream = new Readable()
+  axiosMock.mockResolvedValueOnce({ headers, data: readableStream })
+
+  const req = createRequest(null, {
+    params: { account, version: user.icon.version }
+  })
+
+  const res = await icon.getUserIcon(req)
+
+  expect(headObjectMock.mock.calls.length).toStrictEqual(1)
+  expect(res.headers.ETag).toStrictEqual(headers.ETag)
+  expect(res.headers['Content-Type']).toStrictEqual(headers['Content-Type'])
+  expect(res.headers['Content-Length']).toStrictEqual(headers['Content-Length'])
+  expect((res.headers['Last-Modified'] as Date).getTime()).toStrictEqual(
+    headers['Last-Modified'].getTime()
+  )
+  expect(res.headers['Cache-Control']).toStrictEqual(headers['Cache-Control'])
+  expect(res.stream).toStrictEqual(readableStream)
+})
+
 test('getUserIcon BadRequest: no account', async () => {
   expect.assertions(1)
 
@@ -335,6 +379,34 @@ test('getRoomIcon NotFound: different version', async () => {
 
   const req = createRequest(null, {
     params: { roomname: name, version: '54321' }
+  })
+
+  try {
+    await icon.getRoomIcon(req)
+  } catch (e) {
+    expect(e instanceof NotFound).toStrictEqual(true)
+  }
+})
+
+test('getRoomIcon NotFound: not found on storage', async () => {
+  expect.assertions(1)
+
+  const roomId = new ObjectID()
+  const name = roomId.toHexString()
+  const version = '12345'
+
+  await db.collections.rooms.insertOne({
+    _id: roomId,
+    name: name,
+    createdBy: null,
+    icon: { key: 'iconkey', version }
+  })
+
+  const headObjectMock = getMockType(storage.headObject)
+  headObjectMock.mockRejectedValueOnce({ statusCode: 404 })
+
+  const req = createRequest(null, {
+    params: { roomname: name, version: version }
   })
 
   try {

@@ -36,16 +36,27 @@ export const getUserIcon = async (req: Request): StreamWrapResponse => {
   const version = popParam(req.params.version)
   const user = await db.collections.users.findOne({ account: account })
 
-  if (user?.icon?.version === version) {
-    return await returnIconStream(user.icon.key)
+  const fromIdenticon = async () => {
+    const res = await axios({
+      method: 'GET',
+      url: `https://identicon.mzm.dev/api/identicon/${account}`,
+      responseType: 'stream'
+    })
+    return { headers: res.headers, stream: res.data }
   }
 
-  const res = await axios({
-    method: 'GET',
-    url: `https://identicon.mzm.dev/api/identicon/${account}`,
-    responseType: 'stream'
-  })
-  return { headers: res.headers, stream: res.data }
+  if (user?.icon?.version === version) {
+    try {
+      return await returnIconStream(user.icon.key)
+    } catch (e) {
+      if (e.statusCode === 404) {
+        return await fromIdenticon()
+      }
+      throw e
+    }
+  }
+
+  return await fromIdenticon()
 }
 
 export const getRoomIcon = async (req: Request): StreamWrapResponse => {
@@ -60,7 +71,14 @@ export const getRoomIcon = async (req: Request): StreamWrapResponse => {
     throw new NotFound('no image')
   }
 
-  return await returnIconStream(room.icon.key)
+  try {
+    return await returnIconStream(room.icon.key)
+  } catch (e) {
+    if (e.statusCode === 404) {
+      throw new NotFound('icon not found')
+    }
+    throw e
+  }
 }
 
 type MulterFile = {
