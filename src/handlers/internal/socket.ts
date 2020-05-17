@@ -76,6 +76,11 @@ export const sendMessage = async (user: string, data: SendMessage) => {
     return
   }
   const saved = await saveMessage(message, room, user)
+
+  if (!saved) {
+    return
+  }
+
   const u = await db.collections.users.findOne({
     _id: new ObjectID(user)
   })

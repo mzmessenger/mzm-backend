@@ -11,8 +11,8 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "eslint --ext .ts,.js src",
     "pretest": "npm run lint && npm run build",
-    "jest": "jest",
-    "test": "jest"
+    "jest": "jest --maxWorkers=75%",
+    "test": "npm run jest"
   },
   "license": "MIT",
   "dependencies": {

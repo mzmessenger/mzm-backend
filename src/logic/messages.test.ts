@@ -4,7 +4,7 @@ import { ObjectID } from 'mongodb'
 import { mongoSetup, dropCollection } from '../../jest/testUtil'
 import * as db from '../lib/db'
 import { saveMessage, getMessages } from './messages'
-import { MESSAGE_LIMIT } from '../config'
+import { MESSAGE_LIMIT, MAX_MESSAGE_LENGTH } from '../config'
 
 let mongoServer = null
 let mongoUri = null
@@ -36,12 +36,36 @@ test('saveMessage', async () => {
     userId.toHexString()
   )
 
+  if (!save) {
+    expect(true).toStrictEqual(false)
+    return
+  }
+
   const found = await db.collections.messages.findOne({ _id: save.insertedId })
 
   expect(found._id).toStrictEqual(save.insertedId)
   expect(found.message).toStrictEqual(message)
   expect(found.roomId.toHexString()).toStrictEqual(roomId.toHexString())
   expect(found.userId.toHexString()).toStrictEqual(userId.toHexString())
+})
+
+test('valid: saveMessage', async () => {
+  const message = 'a'.repeat(MAX_MESSAGE_LENGTH + 1)
+  const roomId = new ObjectID()
+  const userId = new ObjectID()
+
+  const beforeCount = await db.collections.messages.countDocuments()
+
+  const save = await saveMessage(
+    message,
+    roomId.toHexString(),
+    userId.toHexString()
+  )
+
+  const afterCount = await db.collections.messages.countDocuments()
+
+  expect(save).toStrictEqual(false)
+  expect(beforeCount).toStrictEqual(afterCount)
 })
 
 test('getMessages', async () => {

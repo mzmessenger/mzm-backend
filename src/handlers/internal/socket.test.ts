@@ -12,6 +12,7 @@ import {
   addQueueToUsers,
   addUnreadQueue
 } from '../../lib/provider'
+import { MAX_MESSAGE_LENGTH } from '../../config'
 
 let mongoServer = null
 
@@ -40,6 +41,7 @@ test('sendMessage', async () => {
 
   const insertedIdMock = new ObjectID()
   const saveMessageMock = getMockType(logicMessages.saveMessage)
+  saveMessageMock.mockClear()
   saveMessageMock.mockResolvedValueOnce({ insertedId: insertedIdMock })
   const addQueueToUsersMock = getMockType(addQueueToUsers)
   addQueueToUsersMock.mockClear()
@@ -61,6 +63,40 @@ test('sendMessage', async () => {
 
   expect(addUnreadQueueMock.mock.calls.length).toStrictEqual(1)
   expect(addQueueToUsersMock.mock.calls.length).toStrictEqual(1)
+})
+
+test('fail: sendMessage', async () => {
+  const roomId = new ObjectID()
+  const userId = new ObjectID()
+
+  await db.collections.users.insertOne({
+    _id: userId,
+    account: 'test',
+    roomOrder: []
+  })
+
+  const beforeCount = await db.collections.messages.countDocuments()
+  const message = 'a'.repeat(MAX_MESSAGE_LENGTH + 1)
+
+  const saveMessageMock = getMockType(logicMessages.saveMessage)
+  saveMessageMock.mockClear()
+  const addQueueToUsersMock = getMockType(addQueueToUsers)
+  addQueueToUsersMock.mockClear()
+  const addUnreadQueueMock = getMockType(addUnreadQueue)
+  addUnreadQueueMock.mockClear()
+
+  await socket.sendMessage(userId.toHexString(), {
+    cmd: 'message:send',
+    message: message,
+    room: roomId.toHexString()
+  })
+
+  const afterCount = await db.collections.messages.countDocuments()
+
+  expect(beforeCount).toStrictEqual(afterCount)
+  expect(saveMessageMock.mock.calls.length).toStrictEqual(1)
+  expect(addUnreadQueueMock.mock.calls.length).toStrictEqual(0)
+  expect(addQueueToUsersMock.mock.calls.length).toStrictEqual(0)
 })
 
 test('modifyMessage', async () => {

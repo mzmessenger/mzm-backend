@@ -14,6 +14,8 @@ export const GENERAL_ROOM_NAME = 'general'
 
 export const MESSAGE_LIMIT = 20
 
+export const MAX_MESSAGE_LENGTH = 3000
+
 export const USER_LIMIT = 20
 
 export const BANNED_CHARS_REGEXP_IN_ROOM_NAME = /^@|\/|\\|\s/
