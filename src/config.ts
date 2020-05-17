@@ -16,7 +16,7 @@ export const MESSAGE_LIMIT = 20
 
 export const USER_LIMIT = 20
 
-export const BANNED_CHARS_REGEXP_IN_ROOM_NAME = /\/|\\|\s/
+export const BANNED_CHARS_REGEXP_IN_ROOM_NAME = /^@|\/|\\|\s/
 
 // https://en.wikipedia.org/wiki/Whitespace_character
 
