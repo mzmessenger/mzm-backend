@@ -70,6 +70,12 @@ export type SendMessage =
 
 export type UnreadQueue = {
   roomId: string
+  messageId: string
+}
+
+export type ReplyQueue = {
+  roomId: string
+  userId: string
 }
 
 export type StreamWrapResponse = Promise<{

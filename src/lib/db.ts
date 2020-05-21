@@ -72,6 +72,7 @@ export type Enter = {
   roomId: ObjectId
   userId: ObjectId
   unreadCounter?: number
+  replied?: number
 }
 
 export type User = {

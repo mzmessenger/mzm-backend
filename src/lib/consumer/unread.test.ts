@@ -3,6 +3,7 @@ jest.mock('../redis')
 
 import { ObjectID } from 'mongodb'
 import { mongoSetup, getMockType } from '../../../jest/testUtil'
+import { UnreadQueue } from '../../types'
 import * as db from '../db'
 import redis from '../redis'
 import { increment } from './unread'
@@ -18,6 +19,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await db.close()
   await mongoServer.stop()
+  await redis.disconnect()
 })
 
 test('increment', async () => {
@@ -29,8 +31,8 @@ test('increment', async () => {
   const maxValue = 100
 
   const userIds = [new ObjectID(), new ObjectID(), new ObjectID()]
-  const users: db.User[] = userIds.map((userId, i) => {
-    return { _id: userId, account: `account-${i}`, roomOrder: [] }
+  const users: db.User[] = userIds.map((userId) => {
+    return { _id: userId, account: userId.toHexString(), roomOrder: [] }
   })
   await db.collections.users.insertMany(users)
   const roomId = new ObjectID()
@@ -39,7 +41,11 @@ test('increment', async () => {
   enter[maxIndex].unreadCounter = maxValue
   await db.collections.enter.insertMany(enter)
 
-  const unreadQueue = JSON.stringify({ roomId: roomId.toHexString() })
+  const _unreadQueue: UnreadQueue = {
+    roomId: roomId.toHexString(),
+    messageId: new ObjectID().toHexString()
+  }
+  const unreadQueue = JSON.stringify(_unreadQueue)
   await increment('queue-id', ['unread', unreadQueue])
 
   let targets = await db.collections.enter

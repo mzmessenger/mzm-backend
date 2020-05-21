@@ -15,6 +15,8 @@ export const isValidAccount = (account: string): boolean => {
     /^(X|x)-/.test(account)
   ) {
     return false
+  } else if (account.length <= 1) {
+    return false
   }
   return /^[a-zA-Z\d_-]+$/.test(account)
 }

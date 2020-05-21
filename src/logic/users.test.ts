@@ -44,7 +44,8 @@ test.each([
   ['here'],
   ['online'],
   ['all'],
-  ['channel']
+  ['channel'],
+  ['a']
 ])('isValidAccount fail (%s)', (arg: string) => {
   const isValid = isValidAccount(arg)
   expect(isValid).toStrictEqual(false)

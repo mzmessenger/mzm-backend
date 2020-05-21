@@ -65,7 +65,10 @@ const unicode = [
 
 export const BANNED_UNICODE_REGEXP_IN_ROOM_NAME = new RegExp(unicode.join('|'))
 
-export const UNREAD_STREAM = 'stream:unread'
+export const stream = {
+  UNREAD_STREAM: 'stream:unread',
+  REPLY_STREAM: 'stream:reply'
+} as const
 
 export const MAX_ROOM_NAME_LENGTH = 80
 

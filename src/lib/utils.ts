@@ -40,3 +40,15 @@ export const createRoomIconPath = (room: import('./db').Room): string => {
 
   return icon
 }
+
+export const repliedAccounts = (message: string) => {
+  const accounts = []
+  const matches = message.matchAll(/@(?<account>[a-zA-Z\d_-]+)(\s|$)/g)
+  for (const match of matches) {
+    const account = match?.groups?.account
+    if (account && !accounts.includes(account)) {
+      accounts.push(account)
+    }
+  }
+  return accounts
+}

@@ -3,6 +3,7 @@ import logger from '../lib/logger'
 import * as HttpErrors from '../lib/errors'
 import { initRemoveConsumerGroup, consumeRemove } from '../lib/consumer/remove'
 import { initUnreadConsumerGroup, consumeUnread } from '../lib/consumer/unread'
+import { initReplyConsumerGroup, consumeReply } from '../lib/consumer/reply'
 import { initGeneral } from './rooms'
 
 const allHttpErrors = Object.keys(HttpErrors).map((err) => HttpErrors[err])
@@ -26,6 +27,8 @@ export const init = async () => {
   await initGeneral()
   await initRemoveConsumerGroup()
   await initUnreadConsumerGroup()
+  await initReplyConsumerGroup()
   consumeRemove()
   consumeUnread()
+  consumeReply()
 }
