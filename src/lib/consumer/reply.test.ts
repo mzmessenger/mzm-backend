@@ -39,29 +39,41 @@ test('reply', async () => {
     roomOrder: []
   })
 
-  const roomId = new ObjectID()
-  const enter = await db.collections.enter.insertOne({
-    userId,
-    roomId,
-    unreadCounter: 0,
-    replied: 0
-  })
+  const targetRoomId = new ObjectID()
+  const enter = [
+    targetRoomId,
+    new ObjectID(),
+    new ObjectID()
+  ].map((roomId) => ({ userId, roomId, unreadCounter: 0, replied: 0 }))
+  await db.collections.enter.insertMany(enter)
 
   const _replyQueue: ReplyQueue = {
-    roomId: roomId.toHexString(),
+    roomId: targetRoomId.toHexString(),
     userId: userId.toHexString()
   }
   const replyQueue = JSON.stringify(_replyQueue)
   await reply('queue-id', ['unread', replyQueue])
 
-  let target = await db.collections.enter.findOne({ _id: enter.insertedId })
-  expect(target.replied).toStrictEqual(1)
+  let data = await db.collections.enter.find({ userId }).toArray()
+  for (const d of data) {
+    if (d.roomId.toHexString() === targetRoomId.toHexString()) {
+      expect(d.replied).toStrictEqual(1)
+    } else {
+      expect(d.replied).toStrictEqual(0)
+    }
+  }
   expect(xack.mock.calls.length).toStrictEqual(1)
   expect(xack.mock.calls[0][2]).toStrictEqual('queue-id')
 
   // call twice
   await reply('queue-id', ['unread', replyQueue])
 
-  target = await db.collections.enter.findOne({ _id: enter.insertedId })
-  expect(target.replied).toStrictEqual(2)
+  data = await db.collections.enter.find({ userId }).toArray()
+  for (const d of data) {
+    if (d.roomId.toHexString() === targetRoomId.toHexString()) {
+      expect(d.replied).toStrictEqual(2)
+    } else {
+      expect(d.replied).toStrictEqual(0)
+    }
+  }
 })

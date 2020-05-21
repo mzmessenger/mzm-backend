@@ -155,7 +155,12 @@ test('readMessage', async () => {
       account: 'test',
       roomOrder: []
     }),
-    db.collections.enter.insertOne({ userId, roomId, unreadCounter: 10 })
+    db.collections.enter.insertOne({
+      userId,
+      roomId,
+      unreadCounter: 10,
+      replied: 1
+    })
   ])
 
   const addMessageQueueMock = getMockType(addMessageQueue)
@@ -169,6 +174,7 @@ test('readMessage', async () => {
   const updated = await db.collections.enter.findOne({ userId, roomId })
 
   expect(updated.unreadCounter).toStrictEqual(0)
+  expect(updated.replied).toStrictEqual(0)
 
   expect(addMessageQueueMock.mock.calls.length).toStrictEqual(1)
 })

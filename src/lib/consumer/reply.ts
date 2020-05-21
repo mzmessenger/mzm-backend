@@ -16,12 +16,16 @@ export const reply = async (ackid: string, messages: string[]) => {
   const queue = JSON.parse(messages[1]) as ReplyQueue
 
   await db.collections.enter.updateOne(
-    { roomId: new ObjectID(queue.roomId), replied: { $lt: 100 } },
+    {
+      userId: new ObjectID(queue.userId),
+      roomId: new ObjectID(queue.roomId),
+      replied: { $lt: 100 }
+    },
     { $inc: { replied: 1 } }
   )
   await client.xack(config.stream.REPLY_STREAM, REPLY_GROUP, ackid)
 
-  logger.info('[reply]', queue.roomId)
+  logger.info('[reply]', 'roomId:', queue.roomId, 'userId:', queue.userId)
 }
 
 export const consumeReply = async () => {

@@ -3,6 +3,7 @@ export type Room = {
   name: string
   iconUrl: string
   unread: number
+  replied: number
 }
 
 export type Message = {

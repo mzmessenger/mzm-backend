@@ -299,7 +299,7 @@ export const readMessage = async (user: string, data: ReadMessage) => {
       userId: new ObjectID(user),
       roomId: new ObjectID(data.room)
     },
-    { $set: { unreadCounter: 0 } }
+    { $set: { unreadCounter: 0, replied: 0 } }
   )
 
   await addMessageQueue({ user, cmd: 'rooms:read', room: data.room })

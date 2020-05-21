@@ -17,7 +17,8 @@ export const enterRoom = async (userId: ObjectID, roomId: ObjectID) => {
   const enter: Omit<db.Enter, '_id'> = {
     userId: userId,
     roomId: roomId,
-    unreadCounter: 0
+    unreadCounter: 0,
+    replied: 0
   }
 
   await Promise.all([

@@ -68,7 +68,8 @@ export const getRooms = async (userId: string): Promise<SendRoom[]> => {
       id: room._id.toHexString(),
       name: room.name,
       iconUrl: createRoomIconPath(room),
-      unread: doc.unreadCounter ? doc.unreadCounter : 0
+      unread: doc.unreadCounter ? doc.unreadCounter : 0,
+      replied: doc.replied ? doc.replied : 0
     })
   }
   return rooms
