@@ -5,8 +5,8 @@ import bodyParser from 'body-parser'
 import multer from 'multer'
 import helmet from 'helmet'
 import { WORKER_NUM, API_LISTEN, MULTER_PATH } from './config'
-import logger from './lib/logger'
-import redis from './lib/redis'
+import { logger } from './lib/logger'
+import * as redis from './lib/redis'
 import * as db from './lib/db'
 import { wrap, streamWrap } from './lib/wrap'
 import * as rooms from './handlers/rooms'
@@ -72,7 +72,8 @@ if (cluster.isMaster) {
     cluster.fork()
   })
 } else {
-  redis.once('connect', async function connect() {
+  redis.connect()
+  redis.client.once('ready', async function connect() {
     logger.info('[redis] connected')
     try {
       await db.connect()
@@ -83,11 +84,11 @@ if (cluster.isMaster) {
         logger.info('Listening on', server.address())
       })
     } catch (e) {
-      redis.emit('error', e)
+      redis.client.emit('error', e)
     }
   })
 
-  redis.on('error', function error(e) {
+  redis.client.on('error', function error(e) {
     logger.error(e)
     process.exit(1)
   })

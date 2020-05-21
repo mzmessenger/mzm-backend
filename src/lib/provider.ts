@@ -1,11 +1,11 @@
-import redis from './redis'
-import logger from './logger'
+import { client } from './redis'
+import { logger } from './logger'
 import { SendMessage, UnreadQueue, ReplyQueue } from '../types'
 import * as config from '../config'
 
 export const addMessageQueue = async (data: SendMessage) => {
   const message = JSON.stringify(data)
-  await redis.xadd(
+  await client.xadd(
     'stream:socket:message',
     'MAXLEN',
     100000,
@@ -24,7 +24,7 @@ export const addQueueToUsers = async (users: string[], data: SendMessage) => {
 
 export const addUnreadQueue = async (roomId: string, messageId: string) => {
   const data: UnreadQueue = { roomId, messageId }
-  redis.xadd(
+  client.xadd(
     config.stream.UNREAD_STREAM,
     'MAXLEN',
     1000,
@@ -36,7 +36,7 @@ export const addUnreadQueue = async (roomId: string, messageId: string) => {
 
 export const addRepliedQueue = async (roomId: string, userId: string) => {
   const data: ReplyQueue = { roomId, userId }
-  redis.xadd(
+  client.xadd(
     config.stream.REPLY_STREAM,
     'MAXLEN',
     1000,

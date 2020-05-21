@@ -1,10 +1,16 @@
 jest.mock('../logger')
-jest.mock('../redis')
+jest.mock('../redis', () => {
+  return {
+    client: {
+      xack: jest.fn()
+    }
+  }
+})
 
 import { ObjectID } from 'mongodb'
 import { mongoSetup, getMockType } from '../../../jest/testUtil'
 import * as db from '../db'
-import redis from '../redis'
+import { client } from '../redis'
 import { remove } from './remove'
 
 let mongoServer = null
@@ -21,7 +27,7 @@ afterAll(async () => {
 })
 
 test('remove', async () => {
-  const xack = getMockType(redis.xack)
+  const xack = getMockType(client.xack)
   xack.mockClear()
   xack.mockResolvedValue('resolve')
 

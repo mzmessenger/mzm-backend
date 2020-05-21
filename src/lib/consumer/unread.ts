@@ -2,8 +2,8 @@ import { ObjectID } from 'mongodb'
 import * as config from '../../config'
 import { UnreadQueue } from '../../types'
 import * as db from '../db'
-import redis from '../redis'
-import logger from '../logger'
+import { client } from '../redis'
+import { logger } from '../logger'
 import { initConsumerGroup, createParser, consumeGroup } from './common'
 
 const UNREAD_GROUP = 'group:unread'
@@ -19,7 +19,7 @@ export const increment = async (ackid: string, messages: string[]) => {
     { roomId: new ObjectID(queue.roomId), unreadCounter: { $lt: 100 } },
     { $inc: { unreadCounter: 1 } }
   )
-  await redis.xack(config.stream.UNREAD_STREAM, UNREAD_GROUP, ackid)
+  await client.xack(config.stream.UNREAD_STREAM, UNREAD_GROUP, ackid)
 
   logger.info('[unread:increment]', queue.roomId)
 }

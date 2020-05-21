@@ -1,9 +1,15 @@
 jest.mock('./logger')
-jest.mock('./redis', () => ({ xadd: jest.fn() }))
-import redis from './redis'
+jest.mock('./redis', () => {
+  return {
+    client: {
+      xadd: jest.fn()
+    }
+  }
+})
+import { client } from './redis'
 import { getMockType } from '../../jest/testUtil'
 
-const xadd = getMockType(redis.xadd)
+const xadd = getMockType(client.xadd)
 
 import { SendMessage } from '../types'
 import { addQueueToUsers } from './provider'

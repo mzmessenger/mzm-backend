@@ -1,7 +1,7 @@
 import { ObjectID } from 'mongodb'
 import * as db from '../db'
-import redis from '../redis'
-import logger from '../logger'
+import { client } from '../redis'
+import { logger } from '../logger'
 import { initConsumerGroup, createParser, consumeGroup } from './common'
 
 const REMOVE_STREAM = 'stream:backend:remove:user'
@@ -33,7 +33,7 @@ export const remove = async (ackid: string, messages: string[]) => {
   await db.collections.users.deleteOne({ _id: target._id })
   await db.collections.enter.deleteMany({ userId: target._id })
 
-  await redis.xack(REMOVE_STREAM, REMOVE_GROUP, ackid)
+  await client.xack(REMOVE_STREAM, REMOVE_GROUP, ackid)
   logger.info('[remove:user]', user)
 }
 

@@ -1,6 +1,6 @@
 import { ObjectID } from 'mongodb'
 import * as db from '../lib/db'
-import logger from '../lib/logger'
+import { logger } from '../lib/logger'
 import { GENERAL_ROOM_NAME } from '../config'
 
 export const initGeneral = async () => {

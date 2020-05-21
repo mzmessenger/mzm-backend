@@ -2,8 +2,8 @@ import { ObjectID } from 'mongodb'
 import * as config from '../../config'
 import { ReplyQueue } from '../../types'
 import * as db from '../db'
-import redis from '../redis'
-import logger from '../logger'
+import { client } from '../redis'
+import { logger } from '../logger'
 import { initConsumerGroup, createParser, consumeGroup } from './common'
 
 const REPLY_GROUP = 'group:reply'
@@ -19,7 +19,7 @@ export const reply = async (ackid: string, messages: string[]) => {
     { roomId: new ObjectID(queue.roomId), replied: { $lt: 100 } },
     { $inc: { replied: 1 } }
   )
-  await redis.xack(config.stream.REPLY_STREAM, REPLY_GROUP, ackid)
+  await client.xack(config.stream.REPLY_STREAM, REPLY_GROUP, ackid)
 
   logger.info('[reply]', queue.roomId)
 }

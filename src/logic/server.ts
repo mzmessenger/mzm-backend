@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import logger from '../lib/logger'
+import { logger } from '../lib/logger'
 import * as HttpErrors from '../lib/errors'
 import { initRemoveConsumerGroup, consumeRemove } from '../lib/consumer/remove'
 import { initUnreadConsumerGroup, consumeUnread } from '../lib/consumer/unread'

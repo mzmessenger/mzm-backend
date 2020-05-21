@@ -1,7 +1,5 @@
 import bunyan from 'bunyan'
 
-const logger = bunyan.createLogger({
+export const logger = bunyan.createLogger({
   name: 'backend'
 })
-
-export default logger
