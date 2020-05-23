@@ -93,7 +93,9 @@ test('getAllUserIdsInRoom', async () => {
   const enter: Omit<db.Enter, '_id'>[] = users.map((user) => {
     return {
       roomId: roomId,
-      userId: user
+      userId: user,
+      unreadCounter: 0,
+      replied: 0
     }
   })
 

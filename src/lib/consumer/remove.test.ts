@@ -39,7 +39,7 @@ test('remove', async () => {
     roomOrder: []
   })
   const insert = roomIds.map((roomId) => {
-    return { userId, roomId }
+    return { userId, roomId, unreadCounter: 0, replied: 0 }
   })
   await db.collections.enter.insertMany(insert)
 
