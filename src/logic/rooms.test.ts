@@ -43,4 +43,6 @@ test('enterRoom', async () => {
   expect(found.length).toStrictEqual(1)
   expect(found[0].roomId.toHexString()).toStrictEqual(roomId.toHexString())
   expect(found[0].userId.toHexString()).toStrictEqual(userId.toHexString())
+  expect(found[0].unreadCounter).toStrictEqual(0)
+  expect(found[0].replied).toStrictEqual(0)
 })

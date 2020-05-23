@@ -34,7 +34,8 @@ test('exitRoom fail (general)', async () => {
   await db.collections.enter.insertOne({
     userId: userId,
     roomId: general._id,
-    unreadCounter: 0
+    unreadCounter: 0,
+    replied: 0
   })
 
   const body = { room: general._id.toHexString() }
@@ -78,7 +79,8 @@ test('getUsers', async () => {
     const enter: Omit<db.Enter, '_id'> = {
       roomId,
       userId,
-      unreadCounter: 0
+      unreadCounter: 0,
+      replied: 0
     }
     insert.push(enter)
     // 削除済みユーザーのテストのため歯抜けにする

@@ -5,11 +5,16 @@ import trim from 'validator/lib/trim'
 import isEmpty from 'validator/lib/isEmpty'
 import { SendMessage as SendMessageType } from '../../types'
 import * as db from '../../lib/db'
-import { createUserIconPath, createRoomIconPath } from '../../lib/utils'
+import {
+  createUserIconPath,
+  createRoomIconPath,
+  repliedAccounts
+} from '../../lib/utils'
 import {
   addMessageQueue,
   addQueueToUsers,
-  addUnreadQueue
+  addUnreadQueue,
+  addRepliedQueue
 } from '../../lib/provider'
 import { saveMessage, getMessages } from '../../logic/messages'
 import {
@@ -76,6 +81,11 @@ export const sendMessage = async (user: string, data: SendMessage) => {
     return
   }
   const saved = await saveMessage(message, room, user)
+
+  if (!saved) {
+    return
+  }
+
   const u = await db.collections.users.findOne({
     _id: new ObjectID(user)
   })
@@ -96,7 +106,17 @@ export const sendMessage = async (user: string, data: SendMessage) => {
     room: room
   }
 
-  await addUnreadQueue(room)
+  // reply
+  await addUnreadQueue(room, saved.insertedId.toHexString())
+  const replied = repliedAccounts(message)
+  if (replied.length > 0) {
+    for (const account of replied) {
+      const user = await db.collections.users.findOne({ account })
+      if (user) {
+        await addRepliedQueue(room, user._id.toHexString())
+      }
+    }
+  }
 
   const users = await getAllUserIdsInRoom(room)
   addQueueToUsers(users, send)
@@ -279,7 +299,7 @@ export const readMessage = async (user: string, data: ReadMessage) => {
       userId: new ObjectID(user),
       roomId: new ObjectID(data.room)
     },
-    { $set: { unreadCounter: 0 } }
+    { $set: { unreadCounter: 0, replied: 0 } }
   )
 
   await addMessageQueue({ user, cmd: 'rooms:read', room: data.room })

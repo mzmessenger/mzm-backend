@@ -1,10 +1,17 @@
 jest.mock('../logger')
-jest.mock('../redis')
+jest.mock('../redis', () => {
+  return {
+    client: {
+      xack: jest.fn()
+    }
+  }
+})
 
 import { ObjectID } from 'mongodb'
 import { mongoSetup, getMockType } from '../../../jest/testUtil'
+import { UnreadQueue } from '../../types'
 import * as db from '../db'
-import redis from '../redis'
+import * as redis from '../redis'
 import { increment } from './unread'
 
 let mongoServer = null
@@ -21,7 +28,7 @@ afterAll(async () => {
 })
 
 test('increment', async () => {
-  const xack = getMockType(redis.xack)
+  const xack = getMockType(redis.client.xack)
   xack.mockClear()
   xack.mockResolvedValue('resolve')
 
@@ -29,17 +36,26 @@ test('increment', async () => {
   const maxValue = 100
 
   const userIds = [new ObjectID(), new ObjectID(), new ObjectID()]
-  const users: db.User[] = userIds.map((userId, i) => {
-    return { _id: userId, account: `account-${i}`, roomOrder: [] }
+  const users: db.User[] = userIds.map((userId) => {
+    return { _id: userId, account: userId.toHexString(), roomOrder: [] }
   })
   await db.collections.users.insertMany(users)
   const roomId = new ObjectID()
-  const enter = userIds.map((userId) => ({ userId, roomId, unreadCounter: 0 }))
+  const enter = userIds.map((userId) => ({
+    userId,
+    roomId,
+    unreadCounter: 0,
+    replied: 0
+  }))
   // max test
   enter[maxIndex].unreadCounter = maxValue
   await db.collections.enter.insertMany(enter)
 
-  const unreadQueue = JSON.stringify({ roomId: roomId.toHexString() })
+  const _unreadQueue: UnreadQueue = {
+    roomId: roomId.toHexString(),
+    messageId: new ObjectID().toHexString()
+  }
+  const unreadQueue = JSON.stringify(_unreadQueue)
   await increment('queue-id', ['unread', unreadQueue])
 
   let targets = await db.collections.enter

@@ -1,15 +1,15 @@
-import redis from '../redis'
-import logger from '../logger'
+import { client } from '../redis'
+import { logger } from '../logger'
 
 export const initConsumerGroup = async (stream: string, groupName: string) => {
   // create consumer group
   try {
-    await redis.xgroup('setid', stream, groupName, '$')
+    await client.xgroup('setid', stream, groupName, '$')
   } catch (e) {
     try {
-      await redis.xgroup('create', stream, groupName, '$', 'MKSTREAM')
+      await client.xgroup('create', stream, groupName, '$', 'MKSTREAM')
     } catch (e) {
-      if (e.toSring().includes('already exists')) {
+      if (e?.toSring().includes('already exists')) {
         return
       }
       logger.error(`failed creating xgroup (${stream}, ${groupName}):`, e)
@@ -45,7 +45,7 @@ export const consumeGroup = async (
   parser: ReturnType<typeof createParser>
 ) => {
   try {
-    const res = await redis.xreadgroup(
+    const res = await client.xreadgroup(
       'group',
       groupName,
       consumerName,

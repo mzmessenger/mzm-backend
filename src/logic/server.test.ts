@@ -1,6 +1,22 @@
 jest.mock('../lib/logger')
-jest.mock('../lib/consumer/remove')
-jest.mock('../lib/consumer/unread')
+jest.mock('../lib/consumer/remove', () => {
+  return {
+    initRemoveConsumerGroup: jest.fn(),
+    consumeRemove: jest.fn()
+  }
+})
+jest.mock('../lib/consumer/unread', () => {
+  return {
+    initUnreadConsumerGroup: jest.fn(),
+    consumeUnread: jest.fn()
+  }
+})
+jest.mock('../lib/consumer/reply', () => {
+  return {
+    initReplyConsumerGroup: jest.fn(),
+    consumeReply: jest.fn()
+  }
+})
 
 import { Request, Response } from 'express'
 import { mongoSetup, getMockType } from '../../jest/testUtil'
@@ -10,6 +26,7 @@ import * as db from '../lib/db'
 import { GENERAL_ROOM_NAME } from '../config'
 import * as consumerRemove from '../lib/consumer/remove'
 import * as consumerUnread from '../lib/consumer/unread'
+import * as consumeReply from '../lib/consumer/reply'
 
 let mongoServer = null
 
@@ -109,6 +126,13 @@ test('init', async () => {
   unreadMock.mockClear()
   unreadMock.mockResolvedValue('resolve')
 
+  const initReplyMock = getMockType(consumeReply.initReplyConsumerGroup)
+  initReplyMock.mockClear()
+  initReplyMock.mockResolvedValue('resolve')
+  const replyMock = getMockType(consumeReply.consumeReply)
+  replyMock.mockClear()
+  replyMock.mockResolvedValue('resolve')
+
   await init()
 
   const general = await db.collections.rooms
@@ -122,6 +146,8 @@ test('init', async () => {
   expect(removeMock.call.length).toStrictEqual(1)
   expect(initUnreadMock.call.length).toStrictEqual(1)
   expect(unreadMock.call.length).toStrictEqual(1)
+  expect(initReplyMock.call.length).toStrictEqual(1)
+  expect(replyMock.call.length).toStrictEqual(1)
 })
 
 test('init twice', async () => {

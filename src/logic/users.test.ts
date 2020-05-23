@@ -44,7 +44,8 @@ test.each([
   ['here'],
   ['online'],
   ['all'],
-  ['channel']
+  ['channel'],
+  ['a']
 ])('isValidAccount fail (%s)', (arg: string) => {
   const isValid = isValidAccount(arg)
   expect(isValid).toStrictEqual(false)
@@ -92,7 +93,9 @@ test('getAllUserIdsInRoom', async () => {
   const enter: Omit<db.Enter, '_id'>[] = users.map((user) => {
     return {
       roomId: roomId,
-      userId: user
+      userId: user,
+      unreadCounter: 0,
+      replied: 0
     }
   })
 

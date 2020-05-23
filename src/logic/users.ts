@@ -2,7 +2,7 @@ import { ObjectID } from 'mongodb'
 import isEmpty from 'validator/lib/isEmpty'
 import { GENERAL_ROOM_NAME } from '../config'
 import { Room as SendRoom } from '../types'
-import logger from '../lib/logger'
+import { logger } from '../lib/logger'
 import * as db from '../lib/db'
 import { createRoomIconPath } from '../lib/utils'
 import { enterRoom } from './rooms'
@@ -14,6 +14,8 @@ export const isValidAccount = (account: string): boolean => {
     /^(here|all|online|channel)$/.test(account) ||
     /^(X|x)-/.test(account)
   ) {
+    return false
+  } else if (account.length <= 1) {
     return false
   }
   return /^[a-zA-Z\d_-]+$/.test(account)
@@ -66,7 +68,8 @@ export const getRooms = async (userId: string): Promise<SendRoom[]> => {
       id: room._id.toHexString(),
       name: room.name,
       iconUrl: createRoomIconPath(room),
-      unread: doc.unreadCounter ? doc.unreadCounter : 0
+      unread: doc.unreadCounter ? doc.unreadCounter : 0,
+      replied: doc.replied ? doc.replied : 0
     })
   }
   return rooms

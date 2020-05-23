@@ -1,6 +1,6 @@
 import { ObjectID } from 'mongodb'
 import * as db from '../lib/db'
-import logger from '../lib/logger'
+import { logger } from '../lib/logger'
 import { GENERAL_ROOM_NAME } from '../config'
 
 export const initGeneral = async () => {
@@ -17,7 +17,8 @@ export const enterRoom = async (userId: ObjectID, roomId: ObjectID) => {
   const enter: Omit<db.Enter, '_id'> = {
     userId: userId,
     roomId: roomId,
-    unreadCounter: 0
+    unreadCounter: 0,
+    replied: 0
   }
 
   await Promise.all([

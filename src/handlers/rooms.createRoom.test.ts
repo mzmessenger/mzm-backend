@@ -42,7 +42,8 @@ test.each([
   ['slash', '/hoge/fuga'],
   ['back slash', 't\\t'],
   ['space', 'aaa bbb'],
-  ['max length', 'a'.repeat(81)]
+  ['max length', 'a'.repeat(81)],
+  ['start with @', '@foo']
 ])('createRoom fail (%s)', async (_label, name) => {
   expect.assertions(1)
 

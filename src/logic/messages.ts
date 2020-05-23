@@ -1,6 +1,6 @@
 import { ObjectID } from 'mongodb'
 import unescape from 'validator/lib/unescape'
-import { MESSAGE_LIMIT } from '../config'
+import { MESSAGE_LIMIT, MAX_MESSAGE_LENGTH } from '../config'
 import * as db from '../lib/db'
 import { createUserIconPath } from '../lib/utils'
 import { Message } from '../types'
@@ -10,6 +10,10 @@ export const saveMessage = async (
   roomId: string,
   userId: string
 ) => {
+  if (message.length > MAX_MESSAGE_LENGTH) {
+    return false
+  }
+
   const insert: Omit<db.Message, '_id'> = {
     message: message,
     roomId: new ObjectID(roomId),

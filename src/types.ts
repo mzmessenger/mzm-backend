@@ -3,6 +3,7 @@ export type Room = {
   name: string
   iconUrl: string
   unread: number
+  replied: number
 }
 
 export type Message = {
@@ -70,6 +71,12 @@ export type SendMessage =
 
 export type UnreadQueue = {
   roomId: string
+  messageId: string
+}
+
+export type ReplyQueue = {
+  roomId: string
+  userId: string
 }
 
 export type StreamWrapResponse = Promise<{

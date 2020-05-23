@@ -1,6 +1,6 @@
 import { MongoClient, Collection, ObjectId } from 'mongodb'
 import { MONGODB_URI } from '../config'
-import logger from './logger'
+import { logger } from './logger'
 
 export const collections: {
   rooms: Collection<Room>
@@ -71,7 +71,8 @@ export type Enter = {
   _id: ObjectId
   roomId: ObjectId
   userId: ObjectId
-  unreadCounter?: number
+  unreadCounter: number
+  replied: number
 }
 
 export type User = {
