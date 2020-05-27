@@ -38,11 +38,13 @@ test('signUp success', async () => {
   await signUp(req)
 })
 
-test('signUp already exist', async () => {
+test.each([
+  ['aaa', 'aaa'],
+  ['test', 'TeSt']
+])('signUp already exist (%s, %s)', async (account, createAccount) => {
   expect.assertions(1)
 
   const created = new ObjectID()
-  const account = 'aaa'
 
   await db.collections.users.insertOne({
     _id: created,
@@ -50,7 +52,7 @@ test('signUp already exist', async () => {
     roomOrder: []
   })
 
-  const body = { account }
+  const body = { account: createAccount }
   const req = createRequest(new ObjectID(), { body })
 
   try {
