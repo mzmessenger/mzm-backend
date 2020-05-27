@@ -23,7 +23,7 @@ import { mongoSetup, getMockType } from '../../jest/testUtil'
 import { errorHandler, checkLogin, init } from './server'
 import * as HttpErrors from '../lib/errors'
 import * as db from '../lib/db'
-import { GENERAL_ROOM_NAME } from '../config'
+import * as config from '../config'
 import * as consumerRemove from '../lib/consumer/remove'
 import * as consumerUnread from '../lib/consumer/unread'
 import * as consumeReply from '../lib/consumer/reply'
@@ -136,11 +136,11 @@ test('init', async () => {
   await init()
 
   const general = await db.collections.rooms
-    .find({ name: GENERAL_ROOM_NAME })
+    .find({ name: config.room.GENERAL_ROOM_NAME })
     .toArray()
 
   expect(general.length).toStrictEqual(1)
-  expect(general[0].name).toStrictEqual(GENERAL_ROOM_NAME)
+  expect(general[0].name).toStrictEqual(config.room.GENERAL_ROOM_NAME)
 
   expect(initRemoveMock.call.length).toStrictEqual(1)
   expect(removeMock.call.length).toStrictEqual(1)
@@ -155,7 +155,7 @@ test('init twice', async () => {
   await init()
 
   const general = await db.collections.rooms
-    .find({ name: GENERAL_ROOM_NAME })
+    .find({ name: config.room.GENERAL_ROOM_NAME })
     .toArray()
 
   expect(general.length).toStrictEqual(1)

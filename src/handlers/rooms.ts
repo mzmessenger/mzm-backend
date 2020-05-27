@@ -1,13 +1,7 @@
 import { Request } from 'express'
 import { ObjectID } from 'mongodb'
 import isEmpty from 'validator/lib/isEmpty'
-import {
-  GENERAL_ROOM_NAME,
-  BANNED_CHARS_REGEXP_IN_ROOM_NAME,
-  BANNED_UNICODE_REGEXP_IN_ROOM_NAME,
-  USER_LIMIT,
-  MAX_ROOM_NAME_LENGTH
-} from '../config'
+import * as config from '../config'
 import { BadRequest } from '../lib/errors'
 import { getRequestUserId } from '../lib/utils'
 import * as db from '../lib/db'
@@ -24,11 +18,13 @@ export const createRoom = async (
   let name = decodeURIComponent((req.body.name || '').trim())
   if (isEmpty(name)) {
     throw new BadRequest({ reason: 'name is empty' })
-  } else if (name.length > MAX_ROOM_NAME_LENGTH) {
-    throw new BadRequest({ reason: `over ${MAX_ROOM_NAME_LENGTH}` })
+  } else if (name.length > config.room.MAX_ROOM_NAME_LENGTH) {
+    throw new BadRequest({ reason: `over ${config.room.MAX_ROOM_NAME_LENGTH}` })
+  } else if (name.length < config.room.MIN_ROOM_NAME_LENGTH) {
+    throw new BadRequest({ reason: `less ${config.room.MAX_ROOM_NAME_LENGTH}` })
   } else if (
-    BANNED_CHARS_REGEXP_IN_ROOM_NAME.test(name) ||
-    BANNED_UNICODE_REGEXP_IN_ROOM_NAME.test(name)
+    config.room.BANNED_CHARS_REGEXP_IN_ROOM_NAME.test(name) ||
+    config.room.BANNED_UNICODE_REGEXP_IN_ROOM_NAME.test(name)
   ) {
     throw new BadRequest({ reason: 'banned chars' })
   }
@@ -66,7 +62,7 @@ export const exitRoom = async (req: Request) => {
   const roomId = new ObjectID(room)
 
   const general = await db.collections.rooms.findOne({
-    name: GENERAL_ROOM_NAME
+    name: config.room.GENERAL_ROOM_NAME
   })
 
   if (room === general._id.toHexString()) {
@@ -123,7 +119,7 @@ export const getUsers = async (
   const enterQuery = db.collections.enter
     .aggregate<db.Message & { user: db.User[] }>(query)
     .sort({ _id: -1 })
-    .limit(USER_LIMIT)
+    .limit(config.room.USER_LIMIT)
 
   const [count, cursor] = await Promise.all([countQuery, enterQuery])
 

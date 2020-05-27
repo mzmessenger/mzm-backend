@@ -1,14 +1,14 @@
 import { ObjectID } from 'mongodb'
 import * as db from '../lib/db'
 import { logger } from '../lib/logger'
-import { GENERAL_ROOM_NAME } from '../config'
+import * as config from '../config'
 
 export const initGeneral = async () => {
   await db.collections.rooms.updateOne(
     {
-      name: GENERAL_ROOM_NAME
+      name: config.room.GENERAL_ROOM_NAME
     },
-    { $set: { name: GENERAL_ROOM_NAME, createdBy: 'system' } },
+    { $set: { name: config.room.GENERAL_ROOM_NAME, createdBy: 'system' } },
     { upsert: true }
   )
 }

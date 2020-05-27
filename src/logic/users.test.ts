@@ -2,7 +2,7 @@ jest.mock('../lib/logger')
 
 import { ObjectID } from 'mongodb'
 import { mongoSetup } from '../../jest/testUtil'
-import { GENERAL_ROOM_NAME } from '../config'
+import * as config from '../config'
 import * as db from '../lib/db'
 import { initGeneral } from './rooms'
 import { isValidAccount, initUser, getAllUserIdsInRoom } from './users'
@@ -20,13 +20,16 @@ afterAll(async () => {
   await mongoServer.stop()
 })
 
-test.each([['valid1234'], ['valid_1234'], ['a-ho-ge'], ['yx-']])(
-  'isValidAccount success (%s)',
-  (arg: string) => {
-    const isValid = isValidAccount(arg)
-    expect(isValid).toStrictEqual(true)
-  }
-)
+test.each([
+  ['valid1234'],
+  ['valid_1234'],
+  ['a-ho-ge'],
+  ['yx-'],
+  ['a'.repeat(config.account.MAX_LENGTH)]
+])('isValidAccount success (%s)', (arg: string) => {
+  const isValid = isValidAccount(arg)
+  expect(isValid).toStrictEqual(true)
+})
 
 test.each([
   ['  aaaa'],
@@ -45,7 +48,8 @@ test.each([
   ['online'],
   ['all'],
   ['channel'],
-  ['a']
+  ['a'],
+  ['a'.repeat(config.account.MAX_LENGTH + 1)]
 ])('isValidAccount fail (%s)', (arg: string) => {
   const isValid = isValidAccount(arg)
   expect(isValid).toStrictEqual(false)
@@ -83,7 +87,9 @@ test('initUser', async () => {
 
   // general にだけ入室している
   expect(foundRooms.length).toStrictEqual(1)
-  expect(foundRooms[0].room[0].name).toStrictEqual(GENERAL_ROOM_NAME)
+  expect(foundRooms[0].room[0].name).toStrictEqual(
+    config.room.GENERAL_ROOM_NAME
+  )
 })
 
 test('getAllUserIdsInRoom', async () => {

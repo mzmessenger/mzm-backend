@@ -2,7 +2,7 @@ jest.mock('../lib/logger')
 
 import { ObjectID } from 'mongodb'
 import { mongoSetup, createRequest } from '../../jest/testUtil'
-import { GENERAL_ROOM_NAME, USER_LIMIT } from '../config'
+import * as config from '../config'
 import * as db from '../lib/db'
 import { initGeneral } from '../logic/rooms'
 import { BadRequest } from '../lib/errors'
@@ -28,7 +28,7 @@ test('exitRoom fail (general)', async () => {
   const userId = new ObjectID()
 
   const general = await db.collections.rooms.findOne({
-    name: GENERAL_ROOM_NAME
+    name: config.room.GENERAL_ROOM_NAME
   })
 
   await db.collections.enter.insertOne({
@@ -69,11 +69,11 @@ test('getUsers', async () => {
 
   const users: db.User[] = []
   const insert: Omit<db.Enter, '_id'>[] = []
-  for (let i = 0; i < USER_LIMIT + overNum; i++) {
+  for (let i = 0; i < config.room.USER_LIMIT + overNum; i++) {
     const userId = new ObjectID()
     const user: db.User = {
       _id: userId,
-      account: `account-${i}`,
+      account: userId.toHexString(),
       roomOrder: []
     }
     const enter: Omit<db.Enter, '_id'> = {
@@ -106,8 +106,8 @@ test('getUsers', async () => {
 
   let res = await getUsers(req)
 
-  expect(res.count).toStrictEqual(USER_LIMIT + overNum)
-  expect(res.users.length).toStrictEqual(USER_LIMIT)
+  expect(res.count).toStrictEqual(config.room.USER_LIMIT + overNum)
+  expect(res.users.length).toStrictEqual(config.room.USER_LIMIT)
 
   for (const user of res.users) {
     const dbUser = userMap.get(user.userId)
@@ -124,6 +124,6 @@ test('getUsers', async () => {
   req = createRequest(userId, { params, query })
   res = await getUsers(req)
 
-  expect(res.count).toStrictEqual(USER_LIMIT + overNum)
+  expect(res.count).toStrictEqual(config.room.USER_LIMIT + overNum)
   expect(res.users.length).toStrictEqual(overNum)
 })
