@@ -1,6 +1,6 @@
 import { ObjectID } from 'mongodb'
 import isEmpty from 'validator/lib/isEmpty'
-import { GENERAL_ROOM_NAME } from '../config'
+import * as config from '../config'
 import { Room as SendRoom } from '../types'
 import { logger } from '../lib/logger'
 import * as db from '../lib/db'
@@ -15,7 +15,10 @@ export const isValidAccount = (account: string): boolean => {
     /^(X|x)-/.test(account)
   ) {
     return false
-  } else if (account.length <= 1) {
+  } else if (
+    account.length < config.account.MIN_LENGTH ||
+    account.length > config.account.MAX_LENGTH
+  ) {
     return false
   }
   return /^[a-zA-Z\d_-]+$/.test(account)
@@ -23,7 +26,7 @@ export const isValidAccount = (account: string): boolean => {
 
 const enterGeneral = async (userId: ObjectID) => {
   const general: db.Room = await db.collections.rooms.findOne({
-    name: GENERAL_ROOM_NAME
+    name: config.room.GENERAL_ROOM_NAME
   })
   const existGeneral = await db.collections.enter.findOne({
     userId: userId,

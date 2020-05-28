@@ -10,15 +10,10 @@ export const API_LISTEN = 3001
 
 export const WORKER_NUM = 2
 
-export const GENERAL_ROOM_NAME = 'general'
-
-export const MESSAGE_LIMIT = 20
-
-export const MAX_MESSAGE_LENGTH = 3000
-
-export const USER_LIMIT = 20
-
-export const BANNED_CHARS_REGEXP_IN_ROOM_NAME = /^@|\/|\\|\s/
+export const account = {
+  MIN_LENGTH: 2,
+  MAX_LENGTH: 30
+} as const
 
 // https://en.wikipedia.org/wiki/Whitespace_character
 
@@ -63,14 +58,25 @@ const unicode = [
   '\uFFA0'
 ]
 
-export const BANNED_UNICODE_REGEXP_IN_ROOM_NAME = new RegExp(unicode.join('|'))
+export const room = {
+  GENERAL_ROOM_NAME: 'general',
+  USER_LIMIT: 20,
+  MESSAGE_LIMIT: 20,
+  MAX_ROOM_NAME_LENGTH: 80,
+  MIN_ROOM_NAME_LENGTH: 1,
+  BANNED_CHARS_REGEXP_IN_ROOM_NAME: /^@|\/|\\|\s/,
+  BANNED_UNICODE_REGEXP_IN_ROOM_NAME: new RegExp(unicode.join('|'))
+} as const
+
+export const message = {
+  MAX_MESSAGE_LENGTH: 3000,
+  MIN_MESSAGE_LENGTH: 1
+} as const
 
 export const stream = {
   UNREAD_STREAM: 'stream:unread',
   REPLY_STREAM: 'stream:reply'
 } as const
-
-export const MAX_ROOM_NAME_LENGTH = 80
 
 export const icon = {
   MAX_USER_ICON_SIZE: 400,

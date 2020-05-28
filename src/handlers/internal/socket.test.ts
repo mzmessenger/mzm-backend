@@ -12,7 +12,7 @@ import {
   addQueueToUsers,
   addUnreadQueue
 } from '../../lib/provider'
-import { MAX_MESSAGE_LENGTH } from '../../config'
+import * as config from '../../config'
 
 let mongoServer = null
 
@@ -76,7 +76,7 @@ test('fail: sendMessage', async () => {
   })
 
   const beforeCount = await db.collections.messages.countDocuments()
-  const message = 'a'.repeat(MAX_MESSAGE_LENGTH + 1)
+  const message = 'a'.repeat(config.message.MAX_MESSAGE_LENGTH + 1)
 
   const saveMessageMock = getMockType(logicMessages.saveMessage)
   saveMessageMock.mockClear()

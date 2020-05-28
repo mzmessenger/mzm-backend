@@ -1,6 +1,6 @@
 import { ObjectID } from 'mongodb'
 import unescape from 'validator/lib/unescape'
-import { MESSAGE_LIMIT, MAX_MESSAGE_LENGTH } from '../config'
+import * as config from '../config'
 import * as db from '../lib/db'
 import { createUserIconPath } from '../lib/utils'
 import { Message } from '../types'
@@ -10,7 +10,10 @@ export const saveMessage = async (
   roomId: string,
   userId: string
 ) => {
-  if (message.length > MAX_MESSAGE_LENGTH) {
+  if (
+    message.length > config.message.MAX_MESSAGE_LENGTH ||
+    message.length < config.message.MIN_MESSAGE_LENGTH
+  ) {
     return false
   }
 
@@ -53,7 +56,7 @@ export const getMessages = async (
   const cursor = await db.collections.messages
     .aggregate<db.Message & { user: db.User[] }>(query)
     .sort({ _id: -1 })
-    .limit(MESSAGE_LIMIT)
+    .limit(config.room.MESSAGE_LIMIT)
 
   const messages: Message[] = []
   for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
@@ -71,5 +74,8 @@ export const getMessages = async (
       icon: createUserIconPath(user?.account, user?.icon?.version)
     })
   }
-  return { existHistory: messages.length >= MESSAGE_LIMIT, messages }
+  return {
+    existHistory: messages.length >= config.room.MESSAGE_LIMIT,
+    messages
+  }
 }

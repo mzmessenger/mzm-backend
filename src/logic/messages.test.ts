@@ -4,7 +4,7 @@ import { ObjectID } from 'mongodb'
 import { mongoSetup, dropCollection } from '../../jest/testUtil'
 import * as db from '../lib/db'
 import { saveMessage, getMessages } from './messages'
-import { MESSAGE_LIMIT, MAX_MESSAGE_LENGTH } from '../config'
+import * as config from '../config'
 
 let mongoServer = null
 let mongoUri = null
@@ -49,24 +49,26 @@ test('saveMessage', async () => {
   expect(found.userId.toHexString()).toStrictEqual(userId.toHexString())
 })
 
-test('valid: saveMessage', async () => {
-  const message = 'a'.repeat(MAX_MESSAGE_LENGTH + 1)
-  const roomId = new ObjectID()
-  const userId = new ObjectID()
+test.each([[''], ['a'.repeat(config.message.MAX_MESSAGE_LENGTH + 1)]])(
+  'valid: saveMessage (%s)',
+  async (message) => {
+    const roomId = new ObjectID()
+    const userId = new ObjectID()
 
-  const beforeCount = await db.collections.messages.countDocuments()
+    const beforeCount = await db.collections.messages.countDocuments()
 
-  const save = await saveMessage(
-    message,
-    roomId.toHexString(),
-    userId.toHexString()
-  )
+    const save = await saveMessage(
+      message,
+      roomId.toHexString(),
+      userId.toHexString()
+    )
 
-  const afterCount = await db.collections.messages.countDocuments()
+    const afterCount = await db.collections.messages.countDocuments()
 
-  expect(save).toStrictEqual(false)
-  expect(beforeCount).toStrictEqual(afterCount)
-})
+    expect(save).toStrictEqual(false)
+    expect(beforeCount).toStrictEqual(afterCount)
+  }
+)
 
 test('getMessages', async () => {
   const overNum = 2
@@ -76,7 +78,7 @@ test('getMessages', async () => {
   const roomId = new ObjectID()
 
   const insert: Omit<db.Message, '_id'>[] = []
-  for (let i = 0; i < MESSAGE_LIMIT + overNum; i++) {
+  for (let i = 0; i < config.room.MESSAGE_LIMIT + overNum; i++) {
     const message: Omit<db.Message, '_id'> = {
       message: `${i}-message`,
       roomId,
@@ -106,7 +108,7 @@ test('getMessages', async () => {
   }, new Map<string, db.Message>())
 
   expect(messages.existHistory).toStrictEqual(true)
-  expect(messages.messages.length).toStrictEqual(MESSAGE_LIMIT)
+  expect(messages.messages.length).toStrictEqual(config.room.MESSAGE_LIMIT)
 
   for (const message of messages.messages) {
     expect(message.userId).toStrictEqual(userId.toHexString())
@@ -130,7 +132,7 @@ test('getMessages just', async () => {
   const roomId = new ObjectID()
 
   const insert: Omit<db.Message, '_id'>[] = []
-  for (let i = 0; i < MESSAGE_LIMIT * 2; i++) {
+  for (let i = 0; i < config.room.MESSAGE_LIMIT * 2; i++) {
     const message: Omit<db.Message, '_id'> = {
       message: `${i}-message`,
       roomId,
@@ -148,12 +150,12 @@ test('getMessages just', async () => {
   let messages = await getMessages(roomId.toHexString())
 
   expect(messages.existHistory).toStrictEqual(true)
-  expect(messages.messages.length).toStrictEqual(MESSAGE_LIMIT)
+  expect(messages.messages.length).toStrictEqual(config.room.MESSAGE_LIMIT)
 
   messages = await getMessages(roomId.toHexString(), messages.messages[0].id)
 
   expect(messages.existHistory).toStrictEqual(true)
-  expect(messages.messages.length).toStrictEqual(MESSAGE_LIMIT)
+  expect(messages.messages.length).toStrictEqual(config.room.MESSAGE_LIMIT)
 
   messages = await getMessages(roomId.toHexString(), messages.messages[0].id)
 

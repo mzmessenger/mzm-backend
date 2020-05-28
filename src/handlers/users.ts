@@ -17,7 +17,9 @@ export const signUp = async (req: Request) => {
     throw new BadRequest('account is not valid')
   }
 
-  const user = await db.collections.users.findOne({ account: account })
+  const user = await db.collections.users.findOne({
+    account: { $regex: account, $options: 'i' }
+  })
   if (user) {
     throw new BadRequest('account is already created')
   }
