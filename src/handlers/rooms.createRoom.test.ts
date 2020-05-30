@@ -44,7 +44,10 @@ test.each([
   ['space', 'aaa bbb'],
   ['max length', 'a'.repeat(81)],
   ['min length', ''],
-  ['start with @', '@foo']
+  ['start with @', '@foo'],
+  ['&', '&room'],
+  ['?', '?room'],
+  ['=', '=room']
 ])('createRoom fail (%s)', async (_label, name) => {
   expect.assertions(1)
 
