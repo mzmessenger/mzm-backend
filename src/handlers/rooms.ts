@@ -5,6 +5,7 @@ import * as config from '../config'
 import { BadRequest } from '../lib/errors'
 import { getRequestUserId } from '../lib/utils'
 import * as db from '../lib/db'
+import { client as elasticsearch } from '../lib/elasticsearch/index'
 import { popParam, createUserIconPath } from '../lib/utils'
 import {
   enterRoom as enterRoomLogic,
@@ -139,4 +140,51 @@ export const getUsers = async (
     users.push(user)
   }
   return { count, users }
+}
+
+export const search = async (req: Request) => {
+  const query = popParam(
+    typeof req.query.query === 'string' ? req.query.query : null
+  )
+  if (!query) {
+    return []
+  }
+
+  // @todo multi query
+
+  const fields =
+    query.length < 2 ? ['name.kuromoji'] : ['name.ngram', 'name.kuromoji']
+
+  const { body } = await elasticsearch.search({
+    index: config.elasticsearch.alias.room,
+    body: {
+      query: {
+        bool: {
+          must: [
+            { match: { status: db.RoomStatusEnum.OPEN } },
+            {
+              multi_match: {
+                fields: fields,
+                query: query
+              }
+            }
+          ]
+        }
+      }
+    }
+  })
+
+  const ids = body.hits.hits.map((elem) => new ObjectID(elem._id))
+  const cursor = await db.collections.rooms.find({ _id: { $in: ids } })
+
+  type ResRoom = Pick<db.Room, 'name'> & { id: string }
+  const rooms: ResRoom[] = []
+  for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
+    rooms.push({
+      id: doc._id.toHexString(),
+      name: doc.name
+    })
+  }
+
+  return { hits: rooms }
 }

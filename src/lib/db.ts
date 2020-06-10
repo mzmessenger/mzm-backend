@@ -57,14 +57,21 @@ export const close = async () => {
   connection.close()
 }
 
+export const RoomStatusEnum = {
+  CLOSE: 0,
+  OPEN: 1
+} as const
+
 export type Room = {
   _id: ObjectId
   name: string
   createdBy: string
+  updatedBy?: ObjectId
   icon?: {
     key: string
     version: string
   }
+  status: typeof RoomStatusEnum[keyof typeof RoomStatusEnum]
 }
 
 export type Enter = {

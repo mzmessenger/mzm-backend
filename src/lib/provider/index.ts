@@ -1,7 +1,8 @@
-import { client } from './redis'
-import { logger } from './logger'
-import { SendMessage, UnreadQueue, ReplyQueue } from '../types'
-import * as config from '../config'
+import { ObjectID } from 'mongodb'
+import { client, lock, release } from '../redis'
+import { logger } from '../logger'
+import { SendMessage, UnreadQueue, ReplyQueue } from '../../types'
+import * as config from '../../config'
 
 export const addMessageQueue = async (data: SendMessage) => {
   const message = JSON.stringify(data)
@@ -41,7 +42,40 @@ export const addRepliedQueue = async (roomId: string, userId: string) => {
     'MAXLEN',
     1000,
     '*',
-    'unread',
+    'reply',
     JSON.stringify(data)
+  )
+}
+
+export const addInitializeSearchRoomQueue = async () => {
+  const lockKey = config.lock.INIT_SEARCH_ROOM_QUEUE
+  const lockVal = new ObjectID().toHexString()
+  const locked = await lock(lockKey, lockVal, 1000 * 2)
+
+  if (!locked) {
+    logger.info('[locked] addInitializeSearchRoomQueue')
+    return
+  }
+
+  await client.xadd(
+    config.stream.ELASTICSEARCH_ROOMS,
+    'MAXLEN',
+    1000,
+    '*',
+    'init',
+    ''
+  )
+
+  await release(lockKey, lockVal)
+}
+
+export const addUpdateSearchRoomQueue = async (roomIds: string[]) => {
+  await client.xadd(
+    config.stream.ELASTICSEARCH_ROOMS,
+    'MAXLEN',
+    1000,
+    '*',
+    'rooms',
+    JSON.stringify(roomIds)
   )
 }

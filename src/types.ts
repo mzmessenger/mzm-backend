@@ -4,6 +4,7 @@ export type Room = {
   iconUrl: string
   unread: number
   replied: number
+  status: 'open' | 'close'
 }
 
 export type Message = {

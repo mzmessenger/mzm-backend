@@ -203,3 +203,47 @@ test('iine', async () => {
 
   expect(message.iine).toStrictEqual(2)
 })
+
+test('openRoom', async () => {
+  const userId = new ObjectID()
+
+  const insert = await db.collections.rooms.insertOne({
+    name: userId.toHexString(),
+    status: db.RoomStatusEnum.CLOSE,
+    createdBy: 'system'
+  })
+
+  await socket.openRoom(userId.toHexString(), {
+    cmd: socket.ReceiveMessageCmd.ROOMS_OPEN,
+    roomId: insert.insertedId.toHexString()
+  })
+
+  const updated = await db.collections.rooms.findOne({
+    _id: insert.insertedId
+  })
+
+  expect(updated.status).toStrictEqual(db.RoomStatusEnum.OPEN)
+  expect(updated.updatedBy).toStrictEqual(userId)
+})
+
+test('closeRoom', async () => {
+  const userId = new ObjectID()
+
+  const insert = await db.collections.rooms.insertOne({
+    name: userId.toHexString(),
+    status: db.RoomStatusEnum.OPEN,
+    createdBy: 'system'
+  })
+
+  await socket.closeRoom(userId.toHexString(), {
+    cmd: socket.ReceiveMessageCmd.ROOMS_CLOSE,
+    roomId: insert.insertedId.toHexString()
+  })
+
+  const updated = await db.collections.rooms.findOne({
+    _id: insert.insertedId
+  })
+
+  expect(updated.status).toStrictEqual(db.RoomStatusEnum.CLOSE)
+  expect(updated.updatedBy).toStrictEqual(userId)
+})

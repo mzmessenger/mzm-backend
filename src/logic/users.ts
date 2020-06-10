@@ -72,7 +72,8 @@ export const getRooms = async (userId: string): Promise<SendRoom[]> => {
       name: room.name,
       iconUrl: createRoomIconPath(room),
       unread: doc.unreadCounter ? doc.unreadCounter : 0,
-      replied: doc.replied ? doc.replied : 0
+      replied: doc.replied ? doc.replied : 0,
+      status: room.status === db.RoomStatusEnum.OPEN ? 'open' : 'close'
     })
   }
   return rooms

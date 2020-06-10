@@ -56,7 +56,7 @@ const unicode = [
   '\u3164',
   '\uFEFF',
   '\uFFA0'
-]
+] as const
 
 export const room = {
   GENERAL_ROOM_NAME: 'general',
@@ -75,7 +75,8 @@ export const message = {
 
 export const stream = {
   UNREAD_STREAM: 'stream:unread',
-  REPLY_STREAM: 'stream:reply'
+  REPLY_STREAM: 'stream:reply',
+  ELASTICSEARCH_ROOMS: 'stream:elasticsearch:rooms'
 } as const
 
 export const icon = {
@@ -99,4 +100,23 @@ export const redis = {
     host: process.env.REDIS_HOST,
     enableOfflineQueue: false
   }
+} as const
+
+export const elasticsearch = {
+  client: {
+    node: process.env.ELASTICSEARCH_NODE
+  },
+  alias: {
+    room: 'rooms'
+  },
+  index: {
+    room: 'index-rooms-v1'
+  }
+} as const
+
+export const lock = {
+  INIT_GENERAL_ROOM: 'lock:INIT_GENERAL_ROOM',
+  INIT_CONSUMER_GROUP: 'lock:INIT_CONSUMER_GROUP',
+  INIT_SEARCH_ROOM_QUEUE: 'lock:INIT_SEARCH_ROOM_QUEUE',
+  INIT_SEARCH_ROOM: 'lock:INIT_SEARCH_ROOM'
 }

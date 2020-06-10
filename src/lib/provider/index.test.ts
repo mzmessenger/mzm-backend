@@ -6,13 +6,13 @@ jest.mock('./redis', () => {
     }
   }
 })
-import { client } from './redis'
-import { getMockType } from '../../jest/testUtil'
+import { client } from '../redis'
+import { getMockType } from '../../../jest/testUtil'
 
 const xadd = getMockType(client.xadd)
 
-import { SendMessage } from '../types'
-import { addQueueToUsers } from './provider'
+import { SendMessage } from '../../types'
+import { addQueueToUsers } from './index'
 
 test('addQueueToUsers', async () => {
   xadd.mockClear()
