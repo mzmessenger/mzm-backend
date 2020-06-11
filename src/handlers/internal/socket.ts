@@ -5,6 +5,7 @@ import trim from 'validator/lib/trim'
 import isEmpty from 'validator/lib/isEmpty'
 import { SendMessage as SendMessageType } from '../../types'
 import * as db from '../../lib/db'
+import * as config from '../../config'
 import {
   createUserIconPath,
   createRoomIconPath,
@@ -341,6 +342,16 @@ export const sortRooms = async (user: string, data: SortRooms) => {
 type OpenRoom = { cmd: typeof ReceiveMessageCmd.ROOMS_OPEN; roomId: string }
 
 export const openRoom = async (user: string, data: OpenRoom) => {
+  const roomId = new ObjectID(data.roomId)
+
+  const general = await db.collections.rooms.findOne({
+    name: config.room.GENERAL_ROOM_NAME
+  })
+
+  if (roomId.toHexString() === general._id.toHexString()) {
+    return
+  }
+
   await db.collections.rooms.updateOne(
     { _id: new ObjectID(data.roomId) },
     { $set: { status: db.RoomStatusEnum.OPEN, updatedBy: new ObjectID(user) } }
@@ -352,6 +363,16 @@ export const openRoom = async (user: string, data: OpenRoom) => {
 type CloseRoom = { cmd: typeof ReceiveMessageCmd.ROOMS_CLOSE; roomId: string }
 
 export const closeRoom = async (user: string, data: CloseRoom) => {
+  const roomId = new ObjectID(data.roomId)
+
+  const general = await db.collections.rooms.findOne({
+    name: config.room.GENERAL_ROOM_NAME
+  })
+
+  if (roomId.toHexString() === general._id.toHexString()) {
+    return
+  }
+
   await db.collections.rooms.updateOne(
     { _id: new ObjectID(data.roomId) },
     { $set: { status: db.RoomStatusEnum.CLOSE, updatedBy: new ObjectID(user) } }

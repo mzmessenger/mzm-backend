@@ -3,6 +3,7 @@ import * as db from '../lib/db'
 import { logger } from '../lib/logger'
 import { lock, release } from '../lib/redis'
 import * as config from '../config'
+import { addUpdateSearchRoomQueue } from '../lib/provider'
 
 export const initGeneral = async () => {
   const lockKey = config.lock.INIT_GENERAL_ROOM
@@ -18,7 +19,13 @@ export const initGeneral = async () => {
     {
       name: config.room.GENERAL_ROOM_NAME
     },
-    { $set: { name: config.room.GENERAL_ROOM_NAME, createdBy: 'system' } },
+    {
+      $set: {
+        name: config.room.GENERAL_ROOM_NAME,
+        status: db.RoomStatusEnum.OPEN,
+        createdBy: 'system'
+      }
+    },
     { upsert: true }
   )
 
@@ -69,4 +76,23 @@ export const createRoom = async (
     updatedBy: null,
     status: db.RoomStatusEnum.CLOSE
   }
+}
+
+export const syncSeachAllRooms = async () => {
+  let counter = 0
+  let roomIds = []
+
+  const cursor = await db.collections.rooms.find({}, { projection: { _id: 1 } })
+
+  for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
+    roomIds.push(doc._id.toHexString())
+    counter++
+    if (roomIds.length > 100) {
+      await addUpdateSearchRoomQueue(roomIds)
+      roomIds = []
+    }
+  }
+
+  await addUpdateSearchRoomQueue(roomIds)
+  logger.info(`[syncSeachAllRooms] ${counter}`)
 }

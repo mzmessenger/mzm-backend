@@ -143,38 +143,48 @@ export const getUsers = async (
 }
 
 export const search = async (req: Request) => {
-  const query = popParam(
+  const _query = popParam(
     typeof req.query.query === 'string' ? req.query.query : null
   )
-  if (!query) {
-    return []
-  }
+
+  const scroll = popParam(
+    typeof req.query.scroll === 'string' ? req.query.scroll : null
+  )
 
   // @todo multi query
-
   const fields =
-    query.length < 2 ? ['name.kuromoji'] : ['name.ngram', 'name.kuromoji']
+    _query.length < 2 ? ['name.kuromoji'] : ['name.ngram', 'name.kuromoji']
 
-  const { body } = await elasticsearch.search({
-    index: config.elasticsearch.alias.room,
-    body: {
-      query: {
-        bool: {
-          must: [
-            { match: { status: db.RoomStatusEnum.OPEN } },
-            {
-              multi_match: {
-                fields: fields,
-                query: query
-              }
-            }
-          ]
-        }
+  const must: object[] = [{ match: { status: db.RoomStatusEnum.OPEN } }]
+
+  if (_query) {
+    must.push({
+      multi_match: {
+        fields: fields,
+        query: _query
       }
-    }
+    })
+  }
+
+  const body: { [key: string]: object | string | number } = {
+    query: {
+      bool: {
+        must: must
+      }
+    },
+    sort: [{ _id: 'asc' }]
+  }
+
+  if (scroll) {
+    body.search_after = [scroll]
+  }
+
+  const { body: resBody } = await elasticsearch.search({
+    index: config.elasticsearch.alias.room,
+    body: body
   })
 
-  const ids = body.hits.hits.map((elem) => new ObjectID(elem._id))
+  const ids = resBody.hits.hits.map((elem) => new ObjectID(elem._id))
   const cursor = await db.collections.rooms.find({ _id: { $in: ids } })
 
   type ResRoom = Pick<db.Room, 'name'> & { id: string }

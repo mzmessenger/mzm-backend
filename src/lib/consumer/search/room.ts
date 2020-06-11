@@ -6,6 +6,7 @@ import {
   insertRooms as _insertRooms
 } from '../../elasticsearch/rooms'
 import { initConsumerGroup, createParser, consumeGroup } from '../common'
+import { RoomQueueType } from '../../../types'
 
 const STREAM = config.stream.ELASTICSEARCH_ROOMS
 const ELASTICSEARCH_ROOMS_GROUP = 'group:elasticsearch:rooms'
@@ -20,15 +21,17 @@ export const insertRooms = async (ackid: string, messages: string[]) => {
   await _insertRooms(roomIds)
 
   await redis.xack(STREAM, ELASTICSEARCH_ROOMS_GROUP, ackid)
-  logger.info('[insert:elasticsearch:rooms]', roomIds)
+  logger.info('[insert:elasticsearch:rooms]', roomIds.length)
 }
 
 const consumer = async (ackid: string, messages: string[]) => {
-  if (messages[0] === 'init') {
+  if (messages[0] === RoomQueueType.INIT) {
     await initAlias()
     logger.info('[init:elasticsearch:rooms]')
-  } else if (messages[0] === 'rooms') {
+    return
+  } else if (messages[0] === RoomQueueType.ROOM) {
     await insertRooms(ackid, messages)
+    return
   }
 }
 

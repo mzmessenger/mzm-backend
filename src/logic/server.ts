@@ -8,6 +8,7 @@ import {
   initSearchRoomConsumerGroup,
   consumeSearchRooms
 } from '../lib/consumer/search/room'
+import { initJobConsumerGroup, consumeJob } from '../lib/consumer/job'
 import { addInitializeSearchRoomQueue } from '../lib/provider/index'
 import { initGeneral } from './rooms'
 
@@ -34,13 +35,15 @@ export const init = async () => {
     initRemoveConsumerGroup(),
     initUnreadConsumerGroup(),
     initReplyConsumerGroup(),
-    initSearchRoomConsumerGroup()
+    initSearchRoomConsumerGroup(),
+    initJobConsumerGroup()
   ])
 
   consumeRemove()
   consumeUnread()
   consumeReply()
   consumeSearchRooms()
+  consumeJob()
 
   addInitializeSearchRoomQueue()
 }

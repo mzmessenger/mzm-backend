@@ -74,9 +74,10 @@ export const message = {
 } as const
 
 export const stream = {
-  UNREAD_STREAM: 'stream:unread',
-  REPLY_STREAM: 'stream:reply',
-  ELASTICSEARCH_ROOMS: 'stream:elasticsearch:rooms'
+  UNREAD: 'stream:unread',
+  REPLY: 'stream:reply',
+  ELASTICSEARCH_ROOMS: 'stream:elasticsearch:rooms',
+  JOB: 'stream:job'
 } as const
 
 export const icon = {
@@ -118,5 +119,6 @@ export const lock = {
   INIT_GENERAL_ROOM: 'lock:INIT_GENERAL_ROOM',
   INIT_CONSUMER_GROUP: 'lock:INIT_CONSUMER_GROUP',
   INIT_SEARCH_ROOM_QUEUE: 'lock:INIT_SEARCH_ROOM_QUEUE',
-  INIT_SEARCH_ROOM: 'lock:INIT_SEARCH_ROOM'
+  INIT_SEARCH_ROOM: 'lock:INIT_SEARCH_ROOM',
+  SYNC_SEARCH_ROOM_QUEUE: 'lock:SYNC_SEARCH_ROOM_QUEUE'
 }

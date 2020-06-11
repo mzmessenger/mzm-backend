@@ -143,7 +143,10 @@ export const insertRooms = async (roomIds: string[]) => {
     })
     body.push({
       name: { kuromoji: doc.name, ngram: doc.name },
-      status: doc.status
+      status:
+        doc.status === db.RoomStatusEnum.OPEN
+          ? db.RoomStatusEnum.OPEN
+          : db.RoomStatusEnum.CLOSE
     })
   }
 

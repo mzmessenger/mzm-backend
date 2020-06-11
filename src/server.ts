@@ -4,6 +4,8 @@ import express from 'express'
 import bodyParser from 'body-parser'
 import multer from 'multer'
 import helmet from 'helmet'
+import schedule from 'node-schedule'
+
 import { WORKER_NUM, API_LISTEN, MULTER_PATH } from './config'
 import { logger } from './lib/logger'
 import * as redis from './lib/redis'
@@ -14,6 +16,15 @@ import * as user from './handlers/users'
 import * as icon from './handlers/icon'
 import * as internal from './handlers/internal'
 import { checkLogin, errorHandler, init } from './logic/server'
+import { addSyncSearchRoomQueue } from './lib/provider'
+
+schedule.scheduleJob({ minute: 0 }, () => {
+  try {
+    addSyncSearchRoomQueue()
+  } catch (e) {
+    logger.error(e)
+  }
+})
 
 const iconUpload = multer({
   dest: MULTER_PATH,

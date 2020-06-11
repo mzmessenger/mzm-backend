@@ -80,6 +80,15 @@ export type ReplyQueue = {
   userId: string
 }
 
+export const RoomQueueType = {
+  INIT: 'RoomQueueType:INIT',
+  ROOM: 'RoomQueueType:ROOM'
+} as const
+
+export const JobType = {
+  SEARCH_ROOM: 'job:SEARCH_ROOM'
+} as const
+
 export type StreamWrapResponse = Promise<{
   headers: { [key: string]: string | number | Date }
   stream: NodeJS.ReadableStream
