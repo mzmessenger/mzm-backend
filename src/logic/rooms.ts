@@ -59,6 +59,15 @@ export const createRoom = async (
   userId: ObjectID,
   name: string
 ): Promise<db.Room> => {
+  const lockKey = config.lock.CREATE_ROOM + ':' + name
+  const lockVal = new ObjectID().toHexString()
+  const locked = await lock(lockKey, lockVal, 1000)
+
+  if (!locked) {
+    logger.info('[locked] createRoom:' + name)
+    return
+  }
+
   const createdBy = userId.toHexString()
   const room: Pick<db.Room, 'name' | 'createdBy' | 'status'> = {
     name,
@@ -67,8 +76,12 @@ export const createRoom = async (
   }
   const inserted = await db.collections.rooms.insertOne(room)
   await enterRoom(userId, inserted.insertedId)
+
   const id = inserted.insertedId.toHexString()
   logger.info(`[room:create] ${name} (${id}) created by ${createdBy}`)
+
+  await release(lockKey, lockVal)
+
   return {
     _id: inserted.insertedId,
     name,

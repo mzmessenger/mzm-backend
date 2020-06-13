@@ -11,7 +11,7 @@ export {
 export const addMessageQueue = async (data: SendMessage) => {
   const message = JSON.stringify(data)
   await client.xadd(
-    'stream:socket:message',
+    config.stream.MESSAGE,
     'MAXLEN',
     100000,
     '*',

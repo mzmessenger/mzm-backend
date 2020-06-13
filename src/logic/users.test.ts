@@ -1,4 +1,10 @@
 jest.mock('../lib/logger')
+jest.mock('../lib/redis', () => {
+  return {
+    lock: jest.fn(() => Promise.resolve(true)),
+    release: jest.fn()
+  }
+})
 
 import { ObjectID } from 'mongodb'
 import { mongoSetup } from '../../jest/testUtil'

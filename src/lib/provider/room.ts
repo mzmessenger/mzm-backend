@@ -25,7 +25,7 @@ export const addInitializeSearchRoomQueue = async () => {
 
   await release(lockKey, lockVal)
 
-  addSyncSearchRoomQueue()
+  await addSyncSearchRoomQueue()
 }
 
 export const addUpdateSearchRoomQueue = async (roomIds: string[]) => {
@@ -60,5 +60,6 @@ export const addSyncSearchRoomQueue = async () => {
     ''
   )
 
+  await release(lockKey, lockVal)
   logger.info('[queue] addSyncSearchRoomQueue')
 }

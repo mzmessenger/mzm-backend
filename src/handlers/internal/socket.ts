@@ -348,7 +348,7 @@ export const openRoom = async (user: string, data: OpenRoom) => {
     name: config.room.GENERAL_ROOM_NAME
   })
 
-  if (roomId.toHexString() === general._id.toHexString()) {
+  if (roomId.toHexString() === general?._id.toHexString()) {
     return
   }
 
@@ -369,7 +369,7 @@ export const closeRoom = async (user: string, data: CloseRoom) => {
     name: config.room.GENERAL_ROOM_NAME
   })
 
-  if (roomId.toHexString() === general._id.toHexString()) {
+  if (roomId.toHexString() === general?._id.toHexString()) {
     return
   }
 

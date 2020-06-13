@@ -23,6 +23,26 @@ jest.mock('../lib/consumer/search/room', () => {
     consumeSearchRooms: jest.fn()
   }
 })
+jest.mock('../lib/consumer/job', () => {
+  return {
+    initJobConsumerGroup: jest.fn(),
+    consumeJob: jest.fn()
+  }
+})
+jest.mock('../lib/redis', () => {
+  return {
+    client: {
+      xadd: jest.fn()
+    },
+    lock: jest.fn(() => Promise.resolve(true)),
+    release: jest.fn()
+  }
+})
+jest.mock('../lib/provider/index', () => {
+  return {
+    addInitializeSearchRoomQueue: jest.fn()
+  }
+})
 
 import { Request, Response } from 'express'
 import { mongoSetup, getMockType } from '../../jest/testUtil'
@@ -34,6 +54,8 @@ import * as consumerRemove from '../lib/consumer/remove'
 import * as consumerUnread from '../lib/consumer/unread'
 import * as consumeReply from '../lib/consumer/reply'
 import * as consumeSearchRoom from '../lib/consumer/search/room'
+import * as consumeJob from '../lib/consumer/job'
+import { addInitializeSearchRoomQueue } from '../lib/provider/index'
 
 let mongoServer = null
 
@@ -126,10 +148,11 @@ test('init', async () => {
     [
       consumeSearchRoom.initSearchRoomConsumerGroup,
       consumeSearchRoom.consumeSearchRooms
-    ]
+    ],
+    [consumeJob.initJobConsumerGroup, consumeJob.consumeJob]
   ]
 
-  // expect.assertions(mocks.length * 2 + 2)
+  expect.assertions(mocks.length * 2 + 3)
 
   for (const [init, consume] of mocks) {
     const initMock = getMockType(init)
@@ -148,6 +171,7 @@ test('init', async () => {
 
   expect(general.length).toStrictEqual(1)
   expect(general[0].name).toStrictEqual(config.room.GENERAL_ROOM_NAME)
+  expect(addInitializeSearchRoomQueue.call.length).toStrictEqual(1)
 
   for (const [init, consume] of mocks) {
     expect(init.call.length).toStrictEqual(1)

@@ -10,7 +10,8 @@ import * as logicMessages from '../../logic/messages'
 import {
   addMessageQueue,
   addQueueToUsers,
-  addUnreadQueue
+  addUnreadQueue,
+  addUpdateSearchRoomQueue
 } from '../../lib/provider'
 import * as config from '../../config'
 
@@ -205,6 +206,9 @@ test('iine', async () => {
 })
 
 test('openRoom', async () => {
+  const queueMock = getMockType(addUpdateSearchRoomQueue)
+  queueMock.mockClear()
+
   const userId = new ObjectID()
 
   const insert = await db.collections.rooms.insertOne({
@@ -224,9 +228,13 @@ test('openRoom', async () => {
 
   expect(updated.status).toStrictEqual(db.RoomStatusEnum.OPEN)
   expect(updated.updatedBy).toStrictEqual(userId)
+  expect(queueMock.call.length).toStrictEqual(1)
 })
 
 test('closeRoom', async () => {
+  const queueMock = getMockType(addUpdateSearchRoomQueue)
+  queueMock.mockClear()
+
   const userId = new ObjectID()
 
   const insert = await db.collections.rooms.insertOne({
@@ -246,4 +254,5 @@ test('closeRoom', async () => {
 
   expect(updated.status).toStrictEqual(db.RoomStatusEnum.CLOSE)
   expect(updated.updatedBy).toStrictEqual(userId)
+  expect(queueMock.call.length).toStrictEqual(1)
 })

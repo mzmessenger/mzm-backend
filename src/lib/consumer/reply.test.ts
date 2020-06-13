@@ -6,13 +6,22 @@ jest.mock('../redis', () => {
     }
   }
 })
+jest.mock('./common', () => {
+  return {
+    initConsumerGroup: jest.fn(),
+    consumeGroup: jest.fn(),
+    createParser: jest.fn()
+  }
+})
 
 import { ObjectID } from 'mongodb'
+import * as config from '../../config'
 import { mongoSetup, getMockType } from '../../../jest/testUtil'
 import { ReplyQueue } from '../../types'
 import * as db from '../db'
 import { client } from '../redis'
-import { reply } from './reply'
+import { initConsumerGroup, consumeGroup } from './common'
+import { reply, initReplyConsumerGroup, consumeReply } from './reply'
 
 let mongoServer = null
 
@@ -25,6 +34,24 @@ beforeAll(async () => {
 afterAll(async () => {
   await db.close()
   await mongoServer.stop()
+})
+
+test('initReplyConsumerGroup', async () => {
+  const init = getMockType(initConsumerGroup)
+
+  await initReplyConsumerGroup()
+
+  expect(init.mock.calls.length).toStrictEqual(1)
+  expect(init.mock.calls[0][0]).toStrictEqual(config.stream.REPLY)
+})
+
+test('consumeReply', async () => {
+  const consume = getMockType(consumeGroup)
+
+  await consumeReply()
+
+  expect(consume.mock.calls.length).toStrictEqual(1)
+  expect(consume.mock.calls[0][2]).toStrictEqual(config.stream.REPLY)
 })
 
 test('reply', async () => {

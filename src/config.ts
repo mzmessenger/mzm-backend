@@ -74,6 +74,8 @@ export const message = {
 } as const
 
 export const stream = {
+  REMOVE_USER: 'stream:backend:remove:user',
+  MESSAGE: 'stream:socket:message',
   UNREAD: 'stream:unread',
   REPLY: 'stream:reply',
   ELASTICSEARCH_ROOMS: 'stream:elasticsearch:rooms',
@@ -123,5 +125,6 @@ export const lock = {
   INIT_CONSUMER_GROUP: 'lock:INIT_CONSUMER_GROUP',
   INIT_SEARCH_ROOM_QUEUE: 'lock:INIT_SEARCH_ROOM_QUEUE',
   INIT_SEARCH_ROOM: 'lock:INIT_SEARCH_ROOM',
-  SYNC_SEARCH_ROOM_QUEUE: 'lock:SYNC_SEARCH_ROOM_QUEUE'
+  SYNC_SEARCH_ROOM_QUEUE: 'lock:SYNC_SEARCH_ROOM_QUEUE',
+  CREATE_ROOM: 'lock:CREATE_ROOM'
 }
