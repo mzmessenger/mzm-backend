@@ -112,6 +112,9 @@ export const elasticsearch = {
   },
   index: {
     room: 'index-rooms-v1'
+  },
+  size: {
+    room: 5
   }
 } as const
 
