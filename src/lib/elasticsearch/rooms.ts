@@ -6,35 +6,61 @@ import * as db from '../db'
 import { client as es } from './index'
 
 const settings = {
+  index: { max_ngram_diff: 2 },
   analysis: {
     tokenizer: {
       kuromoji_tokenizer: {
         type: 'kuromoji_tokenizer',
         mode: 'search'
       },
-      ngram_tokenizer: {
+      unigram_tokenizer: {
         type: 'ngram',
-        min_gram: 2,
+        min_gram: 1,
         max_gram: 3,
         token_chars: ['letter', 'digit', 'punctuation', 'symbol']
       }
     },
-    analyzer: {
-      kuromoji: {
-        type: 'custom',
-        tokenizer: 'kuromoji_tokenizer',
-        filter: ['lowercase', 'kuromoji_baseform', 'romaji_readingform']
-      },
-      ngram: {
-        type: 'custom',
-        tokenizer: 'ngram_tokenizer',
-        filter: ['lowercase']
+    char_filter: {
+      normalize: {
+        type: 'icu_normalizer',
+        name: 'nfkc',
+        mode: 'compose'
       }
     },
     filter: {
+      unigram: {
+        type: 'ngram',
+        min_gram: 1,
+        max_gram: 3
+      },
       romaji_readingform: {
         type: 'kuromoji_readingform',
         use_romaji: true
+      }
+    },
+    analyzer: {
+      kuromoji_index: {
+        type: 'custom',
+        tokenizer: 'kuromoji_tokenizer',
+        char_filter: ['normalize'],
+        filter: [
+          'lowercase',
+          'trim',
+          'romaji_readingform',
+          'asciifolding',
+          'unigram'
+        ]
+      },
+      kuromoji_search: {
+        type: 'custom',
+        tokenizer: 'kuromoji_tokenizer',
+        char_filter: ['normalize'],
+        filter: ['lowercase', 'trim', 'romaji_readingform', 'asciifolding']
+      },
+      unigram_index: {
+        type: 'custom',
+        tokenizer: 'unigram_tokenizer',
+        filter: ['lowercase']
       }
     }
   }
@@ -46,11 +72,12 @@ const mappings = {
       properties: {
         ngram: {
           type: 'text',
-          analyzer: 'ngram'
+          analyzer: 'unigram_index'
         },
         kuromoji: {
           type: 'text',
-          analyzer: 'kuromoji'
+          search_analyzer: 'kuromoji_search',
+          analyzer: 'kuromoji_index'
         }
       }
     },
@@ -113,6 +140,7 @@ export const initAlias = async () => {
       index: config.elasticsearch.index.room,
       body: { settings, mappings }
     })
+    await es.indices.open({ index: config.elasticsearch.index.room })
   }
 
   await es.indices.putAlias({

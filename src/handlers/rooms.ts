@@ -152,7 +152,7 @@ export const search = async (req: Request) => {
   )
 
   // @todo multi query
-  const must: object[] = [{ match: { status: db.RoomStatusEnum.OPEN } }]
+  const must: object[] = []
 
   if (_query) {
     const roomsQuery = {
@@ -181,7 +181,8 @@ export const search = async (req: Request) => {
   const body: { [key: string]: object | string | number } = {
     query: {
       bool: {
-        must: must
+        must: must,
+        filter: [{ match: { status: db.RoomStatusEnum.OPEN } }]
       }
     },
     sort: [{ _id: 'asc' }]
