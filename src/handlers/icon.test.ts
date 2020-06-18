@@ -315,7 +315,9 @@ test('getRoomIcon', async () => {
     _id: roomId,
     name,
     createdBy: null,
-    icon: { key: 'iconkey', version }
+    updatedBy: null,
+    icon: { key: 'iconkey', version },
+    status: db.RoomStatusEnum.CLOSE
   })
 
   const req = createRequest(null, { params: { roomname: name, version } })
@@ -374,7 +376,8 @@ test('getRoomIcon NotFound: different version', async () => {
     _id: roomId,
     name: name,
     createdBy: null,
-    icon: { key: 'iconkey', version }
+    icon: { key: 'iconkey', version },
+    status: db.RoomStatusEnum.CLOSE
   })
 
   const req = createRequest(null, {
@@ -399,7 +402,8 @@ test('getRoomIcon NotFound: not found on storage', async () => {
     _id: roomId,
     name: name,
     createdBy: null,
-    icon: { key: 'iconkey', version }
+    icon: { key: 'iconkey', version },
+    status: db.RoomStatusEnum.CLOSE
   })
 
   const headObjectMock = getMockType(storage.headObject)
@@ -423,7 +427,8 @@ test('uploadRoomIcon', async () => {
   await db.collections.rooms.insertOne({
     _id: roomId,
     name,
-    createdBy: null
+    createdBy: null,
+    status: db.RoomStatusEnum.CLOSE
   })
 
   const putObjectMock = getMockType(storage.putObject)

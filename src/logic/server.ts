@@ -4,6 +4,12 @@ import * as HttpErrors from '../lib/errors'
 import { initRemoveConsumerGroup, consumeRemove } from '../lib/consumer/remove'
 import { initUnreadConsumerGroup, consumeUnread } from '../lib/consumer/unread'
 import { initReplyConsumerGroup, consumeReply } from '../lib/consumer/reply'
+import {
+  initSearchRoomConsumerGroup,
+  consumeSearchRooms
+} from '../lib/consumer/search/room'
+import { initJobConsumerGroup, consumeJob } from '../lib/consumer/job'
+import { addInitializeSearchRoomQueue } from '../lib/provider/index'
 import { initGeneral } from './rooms'
 
 const allHttpErrors = Object.keys(HttpErrors).map((err) => HttpErrors[err])
@@ -24,11 +30,20 @@ export const checkLogin = (req: Request, res: Response, next: NextFunction) => {
 }
 
 export const init = async () => {
-  await initGeneral()
-  await initRemoveConsumerGroup()
-  await initUnreadConsumerGroup()
-  await initReplyConsumerGroup()
+  await Promise.all([
+    initGeneral(),
+    initRemoveConsumerGroup(),
+    initUnreadConsumerGroup(),
+    initReplyConsumerGroup(),
+    initSearchRoomConsumerGroup(),
+    initJobConsumerGroup()
+  ])
+
   consumeRemove()
   consumeUnread()
   consumeReply()
+  consumeSearchRooms()
+  consumeJob()
+
+  addInitializeSearchRoomQueue()
 }

@@ -1,7 +1,19 @@
-import { client } from '../redis'
+import { ObjectID } from 'mongodb'
+import { client, lock, release } from '../redis'
 import { logger } from '../logger'
+import * as config from '../../config'
 
 export const initConsumerGroup = async (stream: string, groupName: string) => {
+  const lockKey =
+    config.lock.INIT_CONSUMER_GROUP + ':' + stream + ':' + groupName
+  const lockVal = new ObjectID().toHexString()
+  const locked = await lock(lockKey, lockVal, 1000)
+
+  if (!locked) {
+    logger.info(`[locked] initConsumerGroup: ${lockKey}`)
+    return
+  }
+
   // create consumer group
   try {
     await client.xgroup('setid', stream, groupName, '$')
@@ -14,7 +26,11 @@ export const initConsumerGroup = async (stream: string, groupName: string) => {
       }
       logger.error(`failed creating xgroup (${stream}, ${groupName}):`, e)
       throw e
+    } finally {
+      await release(lockKey, lockVal)
     }
+  } finally {
+    await release(lockKey, lockVal)
   }
 }
 
@@ -50,7 +66,7 @@ export const consumeGroup = async (
       groupName,
       consumerName,
       'BLOCK',
-      '100',
+      '10',
       'COUNT',
       '100',
       'STREAMS',

@@ -1,36 +1,29 @@
 import { Request } from 'express'
-import {
-  ReceiveMessageCmd,
-  ReceiveMessage,
-  sendMessage,
-  iine,
-  modifyMessage,
-  getMessagesFromRoom,
-  enterRoom,
-  readMessage,
-  sortRooms,
-  getRooms
-} from './internal/socket'
+import * as _socket from './internal/socket'
 
 export const socket = async (req: Request) => {
   const user: string = req.headers['x-user-id'] as string
-  const data = req.body as ReceiveMessage
-  if (data.cmd === ReceiveMessageCmd.MESSAGE_SEND) {
-    return await sendMessage(user, data)
-  } else if (data.cmd === ReceiveMessageCmd.MESSAGE_IINE) {
-    return await iine(user, data)
-  } else if (data.cmd === ReceiveMessageCmd.MESSAGE_MODIFY) {
-    return await modifyMessage(user, data)
-  } else if (data.cmd === ReceiveMessageCmd.MESSAGES_ROOM) {
-    return await getMessagesFromRoom(user, data)
-  } else if (data.cmd === ReceiveMessageCmd.ROOMS_GET) {
-    return await getRooms(user)
-  } else if (data.cmd === ReceiveMessageCmd.ROOMS_ENTER) {
-    return await enterRoom(user, data)
-  } else if (data.cmd === ReceiveMessageCmd.ROOMS_READ) {
-    return await readMessage(user, data)
-  } else if (data.cmd === ReceiveMessageCmd.ROOMS_SORT) {
-    return await sortRooms(user, data)
+  const data = req.body as _socket.ReceiveMessage
+  if (data.cmd === _socket.ReceiveMessageCmd.MESSAGE_SEND) {
+    return await _socket.sendMessage(user, data)
+  } else if (data.cmd === _socket.ReceiveMessageCmd.MESSAGE_IINE) {
+    return await _socket.iine(user, data)
+  } else if (data.cmd === _socket.ReceiveMessageCmd.MESSAGE_MODIFY) {
+    return _socket.modifyMessage(user, data)
+  } else if (data.cmd === _socket.ReceiveMessageCmd.MESSAGES_ROOM) {
+    return _socket.getMessagesFromRoom(user, data)
+  } else if (data.cmd === _socket.ReceiveMessageCmd.ROOMS_GET) {
+    return _socket.getRooms(user)
+  } else if (data.cmd === _socket.ReceiveMessageCmd.ROOMS_ENTER) {
+    return _socket.enterRoom(user, data)
+  } else if (data.cmd === _socket.ReceiveMessageCmd.ROOMS_READ) {
+    return _socket.readMessage(user, data)
+  } else if (data.cmd === _socket.ReceiveMessageCmd.ROOMS_SORT) {
+    return _socket.sortRooms(user, data)
+  } else if (data.cmd === _socket.ReceiveMessageCmd.ROOMS_OPEN) {
+    return await _socket.openRoom(user, data)
+  } else if (data.cmd === _socket.ReceiveMessageCmd.ROOMS_CLOSE) {
+    return await _socket.closeRoom(user, data)
   }
   return
 }

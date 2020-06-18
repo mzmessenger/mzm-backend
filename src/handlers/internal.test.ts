@@ -13,7 +13,9 @@ import {
   readMessage,
   iine,
   sortRooms,
-  getRooms
+  getRooms,
+  openRoom,
+  closeRoom
 } from './internal/socket'
 
 test.each([
@@ -24,7 +26,9 @@ test.each([
   [ReceiveMessageCmd.ROOMS_ENTER, enterRoom],
   [ReceiveMessageCmd.ROOMS_READ, readMessage],
   [ReceiveMessageCmd.ROOMS_SORT, sortRooms],
-  [ReceiveMessageCmd.ROOMS_GET, getRooms]
+  [ReceiveMessageCmd.ROOMS_GET, getRooms],
+  [ReceiveMessageCmd.ROOMS_OPEN, openRoom],
+  [ReceiveMessageCmd.ROOMS_CLOSE, closeRoom]
 ])('socket %s', async (cmd, called: any) => {
   const userId = new ObjectID()
   const body = { cmd }

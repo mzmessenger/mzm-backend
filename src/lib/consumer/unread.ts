@@ -6,10 +6,11 @@ import { client } from '../redis'
 import { logger } from '../logger'
 import { initConsumerGroup, createParser, consumeGroup } from './common'
 
+const STREAM = config.stream.UNREAD
 const UNREAD_GROUP = 'group:unread'
 
 export const initUnreadConsumerGroup = async () => {
-  await initConsumerGroup(config.stream.UNREAD_STREAM, UNREAD_GROUP)
+  await initConsumerGroup(STREAM, UNREAD_GROUP)
 }
 
 export const increment = async (ackid: string, messages: string[]) => {
@@ -19,17 +20,12 @@ export const increment = async (ackid: string, messages: string[]) => {
     { roomId: new ObjectID(queue.roomId), unreadCounter: { $lt: 100 } },
     { $inc: { unreadCounter: 1 } }
   )
-  await client.xack(config.stream.UNREAD_STREAM, UNREAD_GROUP, ackid)
+  await client.xack(STREAM, UNREAD_GROUP, ackid)
 
   logger.info('[unread:increment]', queue.roomId)
 }
 
 export const consumeUnread = async () => {
   const parser = createParser(increment)
-  await consumeGroup(
-    UNREAD_GROUP,
-    'consume-backend',
-    config.stream.UNREAD_STREAM,
-    parser
-  )
+  await consumeGroup(UNREAD_GROUP, 'consume-backend', STREAM, parser)
 }

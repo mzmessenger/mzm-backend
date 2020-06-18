@@ -1,12 +1,17 @@
-import { client } from './redis'
-import { logger } from './logger'
-import { SendMessage, UnreadQueue, ReplyQueue } from '../types'
-import * as config from '../config'
+import { client } from '../redis'
+import { logger } from '../logger'
+import { SendMessage, UnreadQueue, ReplyQueue } from '../../types'
+import * as config from '../../config'
+export {
+  addInitializeSearchRoomQueue,
+  addUpdateSearchRoomQueue,
+  addSyncSearchRoomQueue
+} from './room'
 
 export const addMessageQueue = async (data: SendMessage) => {
   const message = JSON.stringify(data)
   await client.xadd(
-    'stream:socket:message',
+    config.stream.MESSAGE,
     'MAXLEN',
     100000,
     '*',
@@ -25,7 +30,7 @@ export const addQueueToUsers = async (users: string[], data: SendMessage) => {
 export const addUnreadQueue = async (roomId: string, messageId: string) => {
   const data: UnreadQueue = { roomId, messageId }
   client.xadd(
-    config.stream.UNREAD_STREAM,
+    config.stream.UNREAD,
     'MAXLEN',
     1000,
     '*',
@@ -37,11 +42,11 @@ export const addUnreadQueue = async (roomId: string, messageId: string) => {
 export const addRepliedQueue = async (roomId: string, userId: string) => {
   const data: ReplyQueue = { roomId, userId }
   client.xadd(
-    config.stream.REPLY_STREAM,
+    config.stream.REPLY,
     'MAXLEN',
     1000,
     '*',
-    'unread',
+    'reply',
     JSON.stringify(data)
   )
 }

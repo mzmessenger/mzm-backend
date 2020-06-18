@@ -5,7 +5,8 @@ import * as config from '../config'
 import { BadRequest } from '../lib/errors'
 import { getRequestUserId } from '../lib/utils'
 import * as db from '../lib/db'
-import { popParam, createUserIconPath } from '../lib/utils'
+import { client as elasticsearch } from '../lib/elasticsearch/index'
+import { popParam, createUserIconPath, createRoomIconPath } from '../lib/utils'
 import {
   enterRoom as enterRoomLogic,
   createRoom as createRoomLogic
@@ -139,4 +140,83 @@ export const getUsers = async (
     users.push(user)
   }
   return { count, users }
+}
+
+export const search = async (req: Request) => {
+  const _query = popParam(
+    typeof req.query.query === 'string' ? req.query.query : null
+  )
+
+  const scroll = popParam(
+    typeof req.query.scroll === 'string' ? req.query.scroll : null
+  )
+
+  // @todo multi query
+  const must: object[] = []
+
+  if (_query) {
+    const roomsQuery = {
+      bool: {
+        should: [
+          {
+            simple_query_string: {
+              fields: ['name.kuromoji'],
+              query: _query,
+              default_operator: 'and'
+            }
+          }
+        ]
+      }
+    }
+    roomsQuery.bool.should.push({
+      simple_query_string: {
+        query: _query,
+        fields: ['name.ngram'],
+        default_operator: 'and'
+      }
+    })
+    must.push(roomsQuery)
+  }
+
+  const body: { [key: string]: object | string | number } = {
+    query: {
+      bool: {
+        must: must,
+        filter: [{ match: { status: db.RoomStatusEnum.OPEN } }]
+      }
+    },
+    sort: [{ _id: 'asc' }]
+  }
+
+  if (scroll) {
+    body.search_after = [scroll]
+  }
+
+  const { body: resBody } = await elasticsearch.search({
+    index: config.elasticsearch.alias.room,
+    size: config.elasticsearch.size.room,
+    body: body
+  })
+
+  const ids = resBody.hits.hits.map((elem) => new ObjectID(elem._id))
+  const cursor = await db.collections.rooms.find({ _id: { $in: ids } })
+
+  type ResRoom = Pick<db.Room, 'name'> & { id: string; iconUrl: string }
+  const rooms: ResRoom[] = []
+  for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
+    rooms.push({
+      id: doc._id.toHexString(),
+      name: doc.name,
+      iconUrl: createRoomIconPath(doc)
+    })
+  }
+
+  const total = resBody.hits.total.value
+
+  return {
+    query: _query,
+    hits: rooms,
+    total: total,
+    scroll: rooms.length > 0 ? rooms[rooms.length - 1].id : null
+  }
 }

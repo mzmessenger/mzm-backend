@@ -4,6 +4,7 @@ export type Room = {
   iconUrl: string
   unread: number
   replied: number
+  status: 'open' | 'close'
 }
 
 export type Message = {
@@ -78,6 +79,15 @@ export type ReplyQueue = {
   roomId: string
   userId: string
 }
+
+export const RoomQueueType = {
+  INIT: 'RoomQueueType:INIT',
+  ROOM: 'RoomQueueType:ROOM'
+} as const
+
+export const JobType = {
+  SEARCH_ROOM: 'job:SEARCH_ROOM'
+} as const
 
 export type StreamWrapResponse = Promise<{
   headers: { [key: string]: string | number | Date }

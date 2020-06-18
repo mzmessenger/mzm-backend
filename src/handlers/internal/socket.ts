@@ -5,6 +5,7 @@ import trim from 'validator/lib/trim'
 import isEmpty from 'validator/lib/isEmpty'
 import { SendMessage as SendMessageType } from '../../types'
 import * as db from '../../lib/db'
+import * as config from '../../config'
 import {
   createUserIconPath,
   createRoomIconPath,
@@ -14,8 +15,9 @@ import {
   addMessageQueue,
   addQueueToUsers,
   addUnreadQueue,
-  addRepliedQueue
-} from '../../lib/provider'
+  addRepliedQueue,
+  addUpdateSearchRoomQueue
+} from '../../lib/provider/index'
 import { saveMessage, getMessages } from '../../logic/messages'
 import {
   getAllUserIdsInRoom,
@@ -30,6 +32,8 @@ export const ReceiveMessageCmd = {
   ROOMS_ENTER: 'rooms:enter',
   ROOMS_READ: 'rooms:read',
   ROOMS_SORT: 'rooms:sort',
+  ROOMS_OPEN: 'rooms:open',
+  ROOMS_CLOSE: 'rooms:close',
   MESSAGE_SEND: 'message:send',
   MESSAGE_IINE: 'message:iine',
   MESSAGE_MODIFY: 'message:modify',
@@ -49,6 +53,8 @@ export type ReceiveMessage =
   | EnterRoom
   | ReadMessage
   | SortRooms
+  | OpenRoom
+  | CloseRoom
 
 export const getRooms = async (userId: string): Promise<SendMessageType> => {
   const [user, rooms] = await Promise.all([
@@ -331,4 +337,47 @@ export const sortRooms = async (user: string, data: SortRooms) => {
   )
 
   await addMessageQueue({ user, cmd: 'rooms:sort:success', roomOrder })
+}
+
+type OpenRoom = { cmd: typeof ReceiveMessageCmd.ROOMS_OPEN; roomId: string }
+
+export const openRoom = async (user: string, data: OpenRoom) => {
+  const roomId = new ObjectID(data.roomId)
+
+  const general = await db.collections.rooms.findOne({
+    name: config.room.GENERAL_ROOM_NAME
+  })
+
+  if (roomId.toHexString() === general?._id.toHexString()) {
+    return
+  }
+
+  await db.collections.rooms.updateOne(
+    { _id: new ObjectID(data.roomId) },
+    { $set: { status: db.RoomStatusEnum.OPEN, updatedBy: new ObjectID(user) } }
+  )
+  addUpdateSearchRoomQueue([data.roomId])
+  // @todo 伝播
+}
+
+type CloseRoom = { cmd: typeof ReceiveMessageCmd.ROOMS_CLOSE; roomId: string }
+
+export const closeRoom = async (user: string, data: CloseRoom) => {
+  const roomId = new ObjectID(data.roomId)
+
+  const general = await db.collections.rooms.findOne({
+    name: config.room.GENERAL_ROOM_NAME
+  })
+
+  if (roomId.toHexString() === general?._id.toHexString()) {
+    return
+  }
+
+  await db.collections.rooms.updateOne(
+    { _id: new ObjectID(data.roomId) },
+    { $set: { status: db.RoomStatusEnum.CLOSE, updatedBy: new ObjectID(user) } }
+  )
+
+  addUpdateSearchRoomQueue([data.roomId])
+  // @todo 伝播
 }

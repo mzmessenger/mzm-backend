@@ -1,16 +1,35 @@
 import { ObjectID } from 'mongodb'
 import * as db from '../lib/db'
 import { logger } from '../lib/logger'
+import { lock, release } from '../lib/redis'
 import * as config from '../config'
+import { addUpdateSearchRoomQueue } from '../lib/provider'
 
 export const initGeneral = async () => {
+  const lockKey = config.lock.INIT_GENERAL_ROOM
+  const lockVal = new ObjectID().toHexString()
+  const locked = await lock(lockKey, lockVal, 1000)
+
+  if (!locked) {
+    logger.info('[locked] initGeneral')
+    return
+  }
+
   await db.collections.rooms.updateOne(
     {
       name: config.room.GENERAL_ROOM_NAME
     },
-    { $set: { name: config.room.GENERAL_ROOM_NAME, createdBy: 'system' } },
+    {
+      $set: {
+        name: config.room.GENERAL_ROOM_NAME,
+        status: db.RoomStatusEnum.OPEN,
+        createdBy: 'system'
+      }
+    },
     { upsert: true }
   )
+
+  await release(lockKey, lockVal)
 }
 
 export const enterRoom = async (userId: ObjectID, roomId: ObjectID) => {
@@ -40,11 +59,53 @@ export const createRoom = async (
   userId: ObjectID,
   name: string
 ): Promise<db.Room> => {
+  const lockKey = config.lock.CREATE_ROOM + ':' + name
+  const lockVal = new ObjectID().toHexString()
+  const locked = await lock(lockKey, lockVal, 1000)
+
+  if (!locked) {
+    logger.info('[locked] createRoom:' + name)
+    return
+  }
+
   const createdBy = userId.toHexString()
-  const room: Pick<db.Room, 'name' | 'createdBy'> = { name, createdBy }
+  const room: Pick<db.Room, 'name' | 'createdBy' | 'status'> = {
+    name,
+    createdBy,
+    status: db.RoomStatusEnum.CLOSE
+  }
   const inserted = await db.collections.rooms.insertOne(room)
   await enterRoom(userId, inserted.insertedId)
+
   const id = inserted.insertedId.toHexString()
   logger.info(`[room:create] ${name} (${id}) created by ${createdBy}`)
-  return { _id: inserted.insertedId, name, createdBy }
+
+  await release(lockKey, lockVal)
+
+  return {
+    _id: inserted.insertedId,
+    name,
+    createdBy,
+    updatedBy: null,
+    status: db.RoomStatusEnum.CLOSE
+  }
+}
+
+export const syncSeachAllRooms = async () => {
+  let counter = 0
+  let roomIds = []
+
+  const cursor = await db.collections.rooms.find({}, { projection: { _id: 1 } })
+
+  for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
+    roomIds.push(doc._id.toHexString())
+    counter++
+    if (roomIds.length > 100) {
+      await addUpdateSearchRoomQueue(roomIds)
+      roomIds = []
+    }
+  }
+
+  await addUpdateSearchRoomQueue(roomIds)
+  logger.info(`[syncSeachAllRooms] ${counter}`)
 }

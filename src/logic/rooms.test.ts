@@ -1,9 +1,17 @@
 jest.mock('../lib/logger')
+jest.mock('../lib/redis', () => {
+  return {
+    lock: jest.fn(() => Promise.resolve(true)),
+    release: jest.fn()
+  }
+})
 
 import { ObjectID } from 'mongodb'
-import { mongoSetup } from '../../jest/testUtil'
+import { mongoSetup, getMockType } from '../../jest/testUtil'
+import * as config from '../config'
 import * as db from '../lib/db'
-import { enterRoom } from './rooms'
+import * as redis from '../lib/redis'
+import { initGeneral, enterRoom } from './rooms'
 
 let mongoServer = null
 
@@ -16,6 +24,70 @@ beforeAll(async () => {
 afterAll(async () => {
   await db.close()
   await mongoServer.stop()
+})
+
+test('initGeneral', async () => {
+  const release = getMockType(redis.release)
+  release.mockClear()
+
+  let general = await db.collections.rooms
+    .find({
+      name: config.room.GENERAL_ROOM_NAME
+    })
+    .toArray()
+
+  expect(general.length).toStrictEqual(0)
+
+  await initGeneral()
+
+  general = await db.collections.rooms
+    .find({
+      name: config.room.GENERAL_ROOM_NAME
+    })
+    .toArray()
+
+  expect(general.length).toStrictEqual(1)
+  expect(general[0].name).toStrictEqual(config.room.GENERAL_ROOM_NAME)
+  expect(general[0].status).toStrictEqual(db.RoomStatusEnum.OPEN)
+  expect(release.mock.calls.length).toStrictEqual(1)
+
+  // 初期化済みのものはupdateされる
+  await db.collections.rooms.updateOne(
+    { _id: general[0]._id },
+    {
+      $set: {
+        name: config.room.GENERAL_ROOM_NAME,
+        status: db.RoomStatusEnum.CLOSE
+      }
+    }
+  )
+
+  await initGeneral()
+
+  const updated = await db.collections.rooms.findOne({
+    _id: general[0]._id
+  })
+  expect(updated.name).toStrictEqual(config.room.GENERAL_ROOM_NAME)
+  expect(updated.status).toStrictEqual(db.RoomStatusEnum.OPEN)
+})
+
+test('initGeneral (locked)', async () => {
+  const lock = getMockType(redis.lock)
+  lock.mockClear()
+  lock.mockResolvedValue(false)
+  const release = getMockType(redis.release)
+  release.mockClear()
+
+  const originUpdate = db.collections.rooms.updateOne
+  const updateMock = jest.fn()
+  db.collections.rooms.updateOne = updateMock
+
+  await initGeneral()
+
+  expect(updateMock.mock.calls.length).toStrictEqual(0)
+  expect(release.mock.calls.length).toStrictEqual(0)
+
+  db.collections.rooms.updateOne = originUpdate
 })
 
 test('enterRoom', async () => {

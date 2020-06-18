@@ -17,6 +17,32 @@ jest.mock('../lib/consumer/reply', () => {
     consumeReply: jest.fn()
   }
 })
+jest.mock('../lib/consumer/search/room', () => {
+  return {
+    initSearchRoomConsumerGroup: jest.fn(),
+    consumeSearchRooms: jest.fn()
+  }
+})
+jest.mock('../lib/consumer/job', () => {
+  return {
+    initJobConsumerGroup: jest.fn(),
+    consumeJob: jest.fn()
+  }
+})
+jest.mock('../lib/redis', () => {
+  return {
+    client: {
+      xadd: jest.fn()
+    },
+    lock: jest.fn(() => Promise.resolve(true)),
+    release: jest.fn()
+  }
+})
+jest.mock('../lib/provider/index', () => {
+  return {
+    addInitializeSearchRoomQueue: jest.fn()
+  }
+})
 
 import { Request, Response } from 'express'
 import { mongoSetup, getMockType } from '../../jest/testUtil'
@@ -27,6 +53,9 @@ import * as config from '../config'
 import * as consumerRemove from '../lib/consumer/remove'
 import * as consumerUnread from '../lib/consumer/unread'
 import * as consumeReply from '../lib/consumer/reply'
+import * as consumeSearchRoom from '../lib/consumer/search/room'
+import * as consumeJob from '../lib/consumer/job'
+import { addInitializeSearchRoomQueue } from '../lib/provider/index'
 
 let mongoServer = null
 
@@ -112,26 +141,27 @@ test.each([[null], [undefined], ['']])('checkLogin send 401 (%s)', (userId) => {
 })
 
 test('init', async () => {
-  const initRemoveMock = getMockType(consumerRemove.initRemoveConsumerGroup)
-  initRemoveMock.mockClear()
-  initRemoveMock.mockResolvedValue('resolve')
-  const removeMock = getMockType(consumerRemove.consumeRemove)
-  removeMock.mockClear()
-  removeMock.mockResolvedValue('resolve')
+  const mocks = [
+    [consumerRemove.initRemoveConsumerGroup, consumerRemove.consumeRemove],
+    [consumerUnread.initUnreadConsumerGroup, consumerUnread.consumeUnread],
+    [consumeReply.initReplyConsumerGroup, consumeReply.consumeReply],
+    [
+      consumeSearchRoom.initSearchRoomConsumerGroup,
+      consumeSearchRoom.consumeSearchRooms
+    ],
+    [consumeJob.initJobConsumerGroup, consumeJob.consumeJob]
+  ]
 
-  const initUnreadMock = getMockType(consumerUnread.initUnreadConsumerGroup)
-  initUnreadMock.mockClear()
-  initUnreadMock.mockResolvedValue('resolve')
-  const unreadMock = getMockType(consumerUnread.consumeUnread)
-  unreadMock.mockClear()
-  unreadMock.mockResolvedValue('resolve')
+  expect.assertions(mocks.length * 2 + 3)
 
-  const initReplyMock = getMockType(consumeReply.initReplyConsumerGroup)
-  initReplyMock.mockClear()
-  initReplyMock.mockResolvedValue('resolve')
-  const replyMock = getMockType(consumeReply.consumeReply)
-  replyMock.mockClear()
-  replyMock.mockResolvedValue('resolve')
+  for (const [init, consume] of mocks) {
+    const initMock = getMockType(init)
+    initMock.mockClear()
+    initMock.mockResolvedValue('resolve init')
+    const consumeMock = getMockType(consume)
+    consumeMock.mockClear()
+    consumeMock.mockResolvedValue('resolve consume')
+  }
 
   await init()
 
@@ -141,13 +171,12 @@ test('init', async () => {
 
   expect(general.length).toStrictEqual(1)
   expect(general[0].name).toStrictEqual(config.room.GENERAL_ROOM_NAME)
+  expect(addInitializeSearchRoomQueue.call.length).toStrictEqual(1)
 
-  expect(initRemoveMock.call.length).toStrictEqual(1)
-  expect(removeMock.call.length).toStrictEqual(1)
-  expect(initUnreadMock.call.length).toStrictEqual(1)
-  expect(unreadMock.call.length).toStrictEqual(1)
-  expect(initReplyMock.call.length).toStrictEqual(1)
-  expect(replyMock.call.length).toStrictEqual(1)
+  for (const [init, consume] of mocks) {
+    expect(init.call.length).toStrictEqual(1)
+    expect(consume.call.length).toStrictEqual(1)
+  }
 })
 
 test('init twice', async () => {

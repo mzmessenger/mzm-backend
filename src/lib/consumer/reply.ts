@@ -6,10 +6,11 @@ import { client } from '../redis'
 import { logger } from '../logger'
 import { initConsumerGroup, createParser, consumeGroup } from './common'
 
+const STREAM = config.stream.REPLY
 const REPLY_GROUP = 'group:reply'
 
 export const initReplyConsumerGroup = async () => {
-  await initConsumerGroup(config.stream.REPLY_STREAM, REPLY_GROUP)
+  await initConsumerGroup(STREAM, REPLY_GROUP)
 }
 
 export const reply = async (ackid: string, messages: string[]) => {
@@ -23,17 +24,12 @@ export const reply = async (ackid: string, messages: string[]) => {
     },
     { $inc: { replied: 1 } }
   )
-  await client.xack(config.stream.REPLY_STREAM, REPLY_GROUP, ackid)
+  await client.xack(STREAM, REPLY_GROUP, ackid)
 
   logger.info('[reply]', 'roomId:', queue.roomId, 'userId:', queue.userId)
 }
 
 export const consumeReply = async () => {
   const parser = createParser(reply)
-  await consumeGroup(
-    REPLY_GROUP,
-    'consume-backend',
-    config.stream.REPLY_STREAM,
-    parser
-  )
+  await consumeGroup(REPLY_GROUP, 'consume-backend', STREAM, parser)
 }

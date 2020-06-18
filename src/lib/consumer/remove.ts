@@ -1,10 +1,11 @@
 import { ObjectID } from 'mongodb'
+import * as config from '../../config'
 import * as db from '../db'
 import { client } from '../redis'
 import { logger } from '../logger'
 import { initConsumerGroup, createParser, consumeGroup } from './common'
 
-const REMOVE_STREAM = 'stream:backend:remove:user'
+const REMOVE_STREAM = config.stream.REMOVE_USER
 const REMOVE_GROUP = 'group:backend:remove:user'
 
 export const initRemoveConsumerGroup = async () => {

@@ -6,12 +6,21 @@ jest.mock('../redis', () => {
     }
   }
 })
+jest.mock('./common', () => {
+  return {
+    initConsumerGroup: jest.fn(),
+    consumeGroup: jest.fn(),
+    createParser: jest.fn()
+  }
+})
 
 import { ObjectID } from 'mongodb'
+import * as config from '../../config'
 import { mongoSetup, getMockType } from '../../../jest/testUtil'
 import * as db from '../db'
 import { client } from '../redis'
-import { remove } from './remove'
+import { initConsumerGroup, consumeGroup } from './common'
+import { remove, initRemoveConsumerGroup, consumeRemove } from './remove'
 
 let mongoServer = null
 
@@ -24,6 +33,24 @@ beforeAll(async () => {
 afterAll(async () => {
   await db.close()
   await mongoServer.stop()
+})
+
+test('initRemoveConsumerGroup', async () => {
+  const init = getMockType(initConsumerGroup)
+
+  await initRemoveConsumerGroup()
+
+  expect(init.mock.calls.length).toStrictEqual(1)
+  expect(init.mock.calls[0][0]).toStrictEqual(config.stream.REMOVE_USER)
+})
+
+test('consumeRemove', async () => {
+  const consume = getMockType(consumeGroup)
+
+  await consumeRemove()
+
+  expect(consume.mock.calls.length).toStrictEqual(1)
+  expect(consume.mock.calls[0][2]).toStrictEqual(config.stream.REMOVE_USER)
 })
 
 test('remove', async () => {

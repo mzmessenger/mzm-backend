@@ -10,7 +10,8 @@ import * as logicMessages from '../../logic/messages'
 import {
   addMessageQueue,
   addQueueToUsers,
-  addUnreadQueue
+  addUnreadQueue,
+  addUpdateSearchRoomQueue
 } from '../../lib/provider'
 import * as config from '../../config'
 
@@ -202,4 +203,56 @@ test('iine', async () => {
   })
 
   expect(message.iine).toStrictEqual(2)
+})
+
+test('openRoom', async () => {
+  const queueMock = getMockType(addUpdateSearchRoomQueue)
+  queueMock.mockClear()
+
+  const userId = new ObjectID()
+
+  const insert = await db.collections.rooms.insertOne({
+    name: userId.toHexString(),
+    status: db.RoomStatusEnum.CLOSE,
+    createdBy: 'system'
+  })
+
+  await socket.openRoom(userId.toHexString(), {
+    cmd: socket.ReceiveMessageCmd.ROOMS_OPEN,
+    roomId: insert.insertedId.toHexString()
+  })
+
+  const updated = await db.collections.rooms.findOne({
+    _id: insert.insertedId
+  })
+
+  expect(updated.status).toStrictEqual(db.RoomStatusEnum.OPEN)
+  expect(updated.updatedBy).toStrictEqual(userId)
+  expect(queueMock.call.length).toStrictEqual(1)
+})
+
+test('closeRoom', async () => {
+  const queueMock = getMockType(addUpdateSearchRoomQueue)
+  queueMock.mockClear()
+
+  const userId = new ObjectID()
+
+  const insert = await db.collections.rooms.insertOne({
+    name: userId.toHexString(),
+    status: db.RoomStatusEnum.OPEN,
+    createdBy: 'system'
+  })
+
+  await socket.closeRoom(userId.toHexString(), {
+    cmd: socket.ReceiveMessageCmd.ROOMS_CLOSE,
+    roomId: insert.insertedId.toHexString()
+  })
+
+  const updated = await db.collections.rooms.findOne({
+    _id: insert.insertedId
+  })
+
+  expect(updated.status).toStrictEqual(db.RoomStatusEnum.CLOSE)
+  expect(updated.updatedBy).toStrictEqual(userId)
+  expect(queueMock.call.length).toStrictEqual(1)
 })
