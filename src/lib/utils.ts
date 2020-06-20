@@ -12,7 +12,7 @@ export const popParam = (param: string): string => {
   if (!param) {
     return ''
   }
-  return escape(trim(param))
+  return escape(trim(param || '').trim())
 }
 
 export const createUserIconPath = (

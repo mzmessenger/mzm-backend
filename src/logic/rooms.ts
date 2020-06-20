@@ -1,4 +1,5 @@
 import { ObjectID } from 'mongodb'
+import isEmpty from 'validator/lib/isEmpty'
 import * as db from '../lib/db'
 import { logger } from '../lib/logger'
 import { lock, release } from '../lib/redis'
@@ -30,6 +31,33 @@ export const initGeneral = async () => {
   )
 
   await release(lockKey, lockVal)
+}
+
+export const isValidateRoomName = (
+  name: string
+): { valid: boolean; reason?: string } => {
+  if (isEmpty(name)) {
+    return { valid: false, reason: 'name is empty' }
+  } else if (name.length > config.room.MAX_ROOM_NAME_LENGTH) {
+    return {
+      valid: false,
+      reason: `over ${config.room.MAX_ROOM_NAME_LENGTH}`
+    }
+  } else if (name.length < config.room.MIN_ROOM_NAME_LENGTH) {
+    return {
+      valid: false,
+      reason: `less ${config.room.MAX_ROOM_NAME_LENGTH}`
+    }
+  } else if (
+    config.room.BANNED_CHARS_REGEXP_IN_ROOM_NAME.test(name) ||
+    config.room.BANNED_UNICODE_REGEXP_IN_ROOM_NAME.test(name)
+  ) {
+    return {
+      valid: false,
+      reason: `banned chars`
+    }
+  }
+  return { valid: true }
 }
 
 export const enterRoom = async (userId: ObjectID, roomId: ObjectID) => {

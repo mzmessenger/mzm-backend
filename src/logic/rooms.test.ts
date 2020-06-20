@@ -11,7 +11,7 @@ import { mongoSetup, getMockType } from '../../jest/testUtil'
 import * as config from '../config'
 import * as db from '../lib/db'
 import * as redis from '../lib/redis'
-import { initGeneral, enterRoom } from './rooms'
+import { initGeneral, enterRoom, isValidateRoomName } from './rooms'
 
 let mongoServer = null
 
@@ -117,4 +117,41 @@ test('enterRoom', async () => {
   expect(found[0].userId.toHexString()).toStrictEqual(userId.toHexString())
   expect(found[0].unreadCounter).toStrictEqual(0)
   expect(found[0].replied).toStrictEqual(0)
+})
+
+test.each([['aaa'], ['日本語'], ['🍣']])(
+  'isValidateRoomName (%s, %s)',
+  async (name) => {
+    const valid = isValidateRoomName(name)
+    expect(valid.valid).toStrictEqual(true)
+  }
+)
+
+test.each([
+  ['slash', '/hoge/fuga'],
+  ['back slash', 't\\t'],
+  ['space', 'aaa bbb'],
+  ['max length', 'a'.repeat(81)],
+  ['min length', ''],
+  ['start with @', '@foo'],
+  ['&', '&room'],
+  ['?', '?room'],
+  ['=', '=room']
+])('isValidateRoomName fail (%s)', async (_label, name) => {
+  const valid = isValidateRoomName(name)
+  expect(valid.valid).toStrictEqual(false)
+})
+
+test.each([
+  ['00A0', '\u00A0'],
+  ['2001', ' '],
+  ['2003', ' '],
+  ['200C', '‌'],
+  ['0323', '『̣'],
+  ['200B', '​'],
+  ['2029', '\u2029'],
+  ['202A', '‪']
+])('isValidateRoomName fail unicode (%s)', async (_label, name) => {
+  const valid = isValidateRoomName(name)
+  expect(valid.valid).toStrictEqual(false)
 })

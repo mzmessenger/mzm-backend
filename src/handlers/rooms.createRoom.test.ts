@@ -51,38 +51,8 @@ test.each([
 
 test.each([
   ['slash', '/hoge/fuga'],
-  ['back slash', 't\\t'],
-  ['space', 'aaa bbb'],
-  ['max length', 'a'.repeat(81)],
-  ['min length', ''],
-  ['start with @', '@foo'],
-  ['&', '&room'],
-  ['?', '?room'],
-  ['=', '=room']
-])('createRoom fail (%s)', async (_label, name) => {
-  expect.assertions(1)
-
-  const userId = new ObjectID()
-  const body = { name }
-  const req = createRequest(userId, { body })
-
-  try {
-    await createRoom(req)
-  } catch (e) {
-    expect(e instanceof BadRequest).toStrictEqual(true)
-  }
-})
-
-test.each([
-  ['00A0', '\u00A0'],
-  ['2001', ' '],
-  ['2003', ' '],
-  ['200C', '‌'],
-  ['0323', '『̣'],
-  ['200B', '​'],
-  ['2029', '\u2029'],
-  ['202A', '‪']
-])('createRoom fail unicode (%s)', async (_label, name) => {
+  ['00A0', '\u00A0']
+])('createRoom fail', async (_label, name) => {
   expect.assertions(1)
 
   const userId = new ObjectID()
