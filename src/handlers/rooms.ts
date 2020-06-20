@@ -8,6 +8,7 @@ import * as db from '../lib/db'
 import { client as elasticsearch } from '../lib/elasticsearch/index'
 import { popParam, createUserIconPath, createRoomIconPath } from '../lib/utils'
 import {
+  isValidateRoomName,
   enterRoom as enterRoomLogic,
   createRoom as createRoomLogic
 } from '../logic/rooms'
@@ -16,20 +17,11 @@ export const createRoom = async (
   req: Request
 ): Promise<{ id: string; name: string }> => {
   const user = getRequestUserId(req)
-  let name = decodeURIComponent((req.body.name || '').trim())
-  if (isEmpty(name)) {
-    throw new BadRequest({ reason: 'name is empty' })
-  } else if (name.length > config.room.MAX_ROOM_NAME_LENGTH) {
-    throw new BadRequest({ reason: `over ${config.room.MAX_ROOM_NAME_LENGTH}` })
-  } else if (name.length < config.room.MIN_ROOM_NAME_LENGTH) {
-    throw new BadRequest({ reason: `less ${config.room.MAX_ROOM_NAME_LENGTH}` })
-  } else if (
-    config.room.BANNED_CHARS_REGEXP_IN_ROOM_NAME.test(name) ||
-    config.room.BANNED_UNICODE_REGEXP_IN_ROOM_NAME.test(name)
-  ) {
-    throw new BadRequest({ reason: 'banned chars' })
+  const name = popParam(decodeURIComponent(req.body.name))
+  const valid = isValidateRoomName(name)
+  if (!valid.valid) {
+    throw new BadRequest({ reason: valid.reason })
   }
-  name = popParam(name)
 
   const found = await db.collections.rooms.findOne({ name: name })
   // @todo throw error if room is rocked

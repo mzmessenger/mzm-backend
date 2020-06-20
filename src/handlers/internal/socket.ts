@@ -7,6 +7,7 @@ import { SendMessage as SendMessageType } from '../../types'
 import * as db from '../../lib/db'
 import * as config from '../../config'
 import {
+  popParam,
   createUserIconPath,
   createRoomIconPath,
   repliedAccounts
@@ -23,8 +24,11 @@ import {
   getAllUserIdsInRoom,
   getRooms as getRoomsLogic
 } from '../../logic/users'
-import { createRoom } from '../../logic/rooms'
-import { enterRoom as logicEnterRoom } from '../../logic/rooms'
+import {
+  isValidateRoomName,
+  createRoom,
+  enterRoom as logicEnterRoom
+} from '../../logic/rooms'
 
 export const ReceiveMessageCmd = {
   CONNECTION: 'socket:connection',
@@ -264,7 +268,17 @@ export const enterRoom = async (
     const id = escape(trim(data.id))
     room = await db.collections.rooms.findOne({ _id: new ObjectID(id) })
   } else if (data.name) {
-    const name = escape(trim(decodeURIComponent(data.name)))
+    const name = popParam(decodeURIComponent(data.name))
+    const valid = isValidateRoomName(name)
+    if (!valid.valid) {
+      return {
+        user,
+        cmd: 'rooms:enter:fail',
+        id: null,
+        name: data.name,
+        reason: valid.reason
+      }
+    }
     const found = await db.collections.rooms.findOne({ name: name })
 
     if (found) {
@@ -274,9 +288,14 @@ export const enterRoom = async (
     }
   }
 
-  // @todo send bad request
   if (!room) {
-    return
+    return {
+      user,
+      cmd: 'rooms:enter:fail',
+      id: null,
+      name: data.name,
+      reason: 'not found'
+    }
   }
 
   await logicEnterRoom(new ObjectID(user), room._id)

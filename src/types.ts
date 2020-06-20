@@ -48,6 +48,13 @@ export type SendMessage =
     }
   | {
       user: string
+      cmd: 'rooms:enter:fail'
+      id: string
+      name: string
+      reason: string
+    }
+  | {
+      user: string
       cmd: 'message:modify'
       message: Message
       room: string
