@@ -32,13 +32,9 @@ export const signUp = async (req: Request) => {
 export const getUserInfo = async (req: Request) => {
   const id = getRequestUserId(req)
 
-  const user: Pick<
-    db.User,
-    '_id' | 'account' | 'icon'
-  > = await db.collections.users.findOne(
-    { _id: new ObjectID(id) },
-    { projection: { account: 1, icon: 1 } }
-  )
+  const user = await db.collections.users.findOne<
+    Pick<db.User, '_id' | 'account' | 'icon'>
+  >({ _id: new ObjectID(id) }, { projection: { account: 1, icon: 1 } })
 
   const twitter: string = (req.headers['x-twitter-user-name'] as string) || null
   const github: string = (req.headers['x-github-user-name'] as string) || null

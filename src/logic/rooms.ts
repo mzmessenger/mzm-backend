@@ -123,7 +123,10 @@ export const syncSeachAllRooms = async () => {
   let counter = 0
   let roomIds = []
 
-  const cursor = await db.collections.rooms.find({}, { projection: { _id: 1 } })
+  const cursor = await db.collections.rooms.find<Pick<db.Room, '_id'>>(
+    {},
+    { projection: { _id: 1 } }
+  )
 
   for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
     roomIds.push(doc._id.toHexString())
