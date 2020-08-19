@@ -62,7 +62,7 @@ export type ReceiveMessage =
 
 export const getRooms = async (userId: string): Promise<SendMessageType> => {
   const [user, rooms] = await Promise.all([
-    db.collections.users.findOne(
+    db.collections.users.findOne<Pick<db.User, 'roomOrder'>>(
       { _id: new ObjectID(userId) },
       { projection: { roomOrder: 1 } }
     ),
