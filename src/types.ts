@@ -1,3 +1,5 @@
+import * as db from './lib/db'
+
 export type Room = {
   id: string
   name: string
@@ -5,6 +7,18 @@ export type Room = {
   unread: number
   replied: number
   status: 'open' | 'close'
+}
+
+type Vote = {
+  questions: { text: string }[]
+  answers: {
+    answer: number
+    index: number
+    userId: string
+    userAccount: string
+    icon: string
+  }[]
+  status: typeof db.VoteStatusEnum[keyof typeof db.VoteStatusEnum]
 }
 
 export type Message = {
@@ -17,6 +31,7 @@ export type Message = {
   updatedAt: Date | null
   userAccount: string
   icon: string
+  vote?: Vote
 }
 
 export type SendMessage =
@@ -76,6 +91,12 @@ export type SendMessage =
       cmd: 'rooms:sort:success'
       roomOrder: string[]
     }
+  | {
+      user?: string
+      cmd: 'vote:answers'
+      messageId: string
+      answers: Vote['answers']
+    }
 
 export type UnreadQueue = {
   roomId: string
@@ -85,6 +106,10 @@ export type UnreadQueue = {
 export type ReplyQueue = {
   roomId: string
   userId: string
+}
+
+export type VoteQueue = {
+  messageId: string
 }
 
 export const RoomQueueType = {

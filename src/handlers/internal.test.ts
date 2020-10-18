@@ -15,7 +15,9 @@ import {
   sortRooms,
   getRooms,
   openRoom,
-  closeRoom
+  closeRoom,
+  sendVoteAnswer,
+  removeVoteAnswer
 } from './internal/socket'
 
 test.each([
@@ -28,7 +30,9 @@ test.each([
   [ReceiveMessageCmd.ROOMS_SORT, sortRooms],
   [ReceiveMessageCmd.ROOMS_GET, getRooms],
   [ReceiveMessageCmd.ROOMS_OPEN, openRoom],
-  [ReceiveMessageCmd.ROOMS_CLOSE, closeRoom]
+  [ReceiveMessageCmd.ROOMS_CLOSE, closeRoom],
+  [ReceiveMessageCmd.VOTE_ANSWER_SEND, sendVoteAnswer],
+  [ReceiveMessageCmd.VOTE_ANSWER_REMOVE, removeVoteAnswer]
 ])('socket %s', async (cmd, called: any) => {
   const userId = new ObjectID()
   const body = { cmd }

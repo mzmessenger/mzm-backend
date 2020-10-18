@@ -1,6 +1,6 @@
 import { client } from '../redis'
 import { logger } from '../logger'
-import { SendMessage, UnreadQueue, ReplyQueue } from '../../types'
+import { SendMessage, UnreadQueue, ReplyQueue, VoteQueue } from '../../types'
 import * as config from '../../config'
 export {
   addInitializeSearchRoomQueue,
@@ -23,7 +23,9 @@ export const addMessageQueue = async (data: SendMessage) => {
 
 export const addQueueToUsers = async (users: string[], data: SendMessage) => {
   // todo: too heavy
-  const promises = users.map((user) => addMessageQueue({ ...data, user }))
+  const promises = users.map((user) => {
+    addMessageQueue({ ...data, user })
+  })
   await Promise.all(promises)
 }
 
@@ -43,6 +45,18 @@ export const addRepliedQueue = async (roomId: string, userId: string) => {
   const data: ReplyQueue = { roomId, userId }
   client.xadd(
     config.stream.REPLY,
+    'MAXLEN',
+    1000,
+    '*',
+    'reply',
+    JSON.stringify(data)
+  )
+}
+
+export const addVoteQueue = async (messageId: string) => {
+  const data: VoteQueue = { messageId }
+  client.xadd(
+    config.stream.VOTE,
     'MAXLEN',
     1000,
     '*',

@@ -24,6 +24,10 @@ export const socket = async (req: Request) => {
     return await _socket.openRoom(user, data)
   } else if (data.cmd === _socket.ReceiveMessageCmd.ROOMS_CLOSE) {
     return await _socket.closeRoom(user, data)
+  } else if (data.cmd === _socket.ReceiveMessageCmd.VOTE_ANSWER_SEND) {
+    return await _socket.sendVoteAnswer(user, data)
+  } else if (data.cmd === _socket.ReceiveMessageCmd.VOTE_ANSWER_REMOVE) {
+    return await _socket.removeVoteAnswer(user, data)
   }
   return
 }

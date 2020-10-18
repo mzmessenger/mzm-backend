@@ -3,6 +3,7 @@ import escape from 'validator/lib/escape'
 import unescape from 'validator/lib/unescape'
 import trim from 'validator/lib/trim'
 import isEmpty from 'validator/lib/isEmpty'
+import isNumeric from 'validator/lib/isNumeric'
 import { SendMessage as SendMessageType } from '../../types'
 import * as db from '../../lib/db'
 import * as config from '../../config'
@@ -17,7 +18,8 @@ import {
   addQueueToUsers,
   addUnreadQueue,
   addRepliedQueue,
-  addUpdateSearchRoomQueue
+  addUpdateSearchRoomQueue,
+  addVoteQueue
 } from '../../lib/provider/index'
 import { saveMessage, getMessages } from '../../logic/messages'
 import {
@@ -41,7 +43,9 @@ export const ReceiveMessageCmd = {
   MESSAGE_SEND: 'message:send',
   MESSAGE_IINE: 'message:iine',
   MESSAGE_MODIFY: 'message:modify',
-  MESSAGES_ROOM: 'messages:room'
+  MESSAGES_ROOM: 'messages:room',
+  VOTE_ANSWER_SEND: 'vote:answer:send',
+  VOTE_ANSWER_REMOVE: 'vote:answer:remove'
 } as const
 
 export type ReceiveMessage =
@@ -59,6 +63,8 @@ export type ReceiveMessage =
   | SortRooms
   | OpenRoom
   | CloseRoom
+  | SendVoteAnswer
+  | RemoveVoteAnswer
 
 export const getRooms = async (userId: string): Promise<SendMessageType> => {
   const [user, rooms] = await Promise.all([
@@ -81,6 +87,11 @@ type SendMessage = {
   cmd: typeof ReceiveMessageCmd.MESSAGE_SEND
   message: string
   room: string
+  vote?: {
+    questions: {
+      text: string
+    }[]
+  }
 }
 
 export const sendMessage = async (user: string, data: SendMessage) => {
@@ -90,7 +101,32 @@ export const sendMessage = async (user: string, data: SendMessage) => {
   if (isEmpty(message) || isEmpty(room)) {
     return
   }
-  const saved = await saveMessage(message, room, user)
+
+  // アンケート
+  let vote: db.Message['vote'] = null
+  if (data.vote) {
+    let length = 0
+    const questions = []
+    for (const q of data.vote.questions) {
+      if (
+        isEmpty(q.text) ||
+        q.text.length > config.vote.MAX_QUESTION_LENGTH ||
+        length > config.vote.MAX_QUESTION_NUM
+      ) {
+        // todo: send bad request
+        return
+      }
+      questions.push({ text: q.text })
+      length += 1
+    }
+    vote = {
+      questions,
+      status: db.VoteStatusEnum.OPEN,
+      type: db.VoteTypeEnum.CHOICE
+    }
+  }
+
+  const saved = await saveMessage(message, room, user, vote)
 
   if (!saved) {
     return
@@ -114,6 +150,15 @@ export const sendMessage = async (user: string, data: SendMessage) => {
       icon: createUserIconPath(u.account, u.icon?.version)
     },
     room: room
+  }
+
+  if (vote) {
+    const questions = vote.questions.map((q) => ({ text: q.text }))
+    send.message.vote = {
+      questions,
+      answers: [],
+      status: db.VoteStatusEnum.OPEN
+    }
   }
 
   // reply
@@ -399,4 +444,81 @@ export const closeRoom = async (user: string, data: CloseRoom) => {
 
   addUpdateSearchRoomQueue([data.roomId])
   // @todo 伝播
+}
+
+type SendVoteAnswer = {
+  cmd: typeof ReceiveMessageCmd.VOTE_ANSWER_SEND
+  messageId: string
+  index: number
+  answer: number
+}
+
+const isAnswer = (answer: number): answer is db.VoteAnswer['answer'] => {
+  return Object.values<number>(db.VoteAnswerEnum).includes(answer)
+}
+
+export const sendVoteAnswer = async (user: string, data: SendVoteAnswer) => {
+  if (
+    isEmpty(data.messageId) ||
+    isEmpty(`${data.index}`) ||
+    isEmpty(`${data.answer}`) ||
+    !isNumeric(`${data.index}`, { no_symbols: true }) ||
+    !isNumeric(`${data.answer}`, { no_symbols: true })
+  ) {
+    // todo: send bad request
+    return
+  }
+
+  if (!isAnswer(data.answer)) {
+    // todo: send bad request
+    return
+  }
+
+  // @todo messageid check
+  // @todo check open
+
+  await db.collections.voteAnswer.updateOne(
+    {
+      messageId: new ObjectID(data.messageId),
+      userId: new ObjectID(user),
+      index: data.index
+    },
+    {
+      $set: { answer: data.answer }
+    },
+    { upsert: true }
+  )
+
+  addVoteQueue(data.messageId)
+}
+
+type RemoveVoteAnswer = {
+  cmd: typeof ReceiveMessageCmd.VOTE_ANSWER_REMOVE
+  messageId: string
+  index: number
+}
+
+export const removeVoteAnswer = async (
+  user: string,
+  data: RemoveVoteAnswer
+) => {
+  if (
+    isEmpty(data.messageId) ||
+    isEmpty(`${data.index}`) ||
+    !isNumeric(`${data.index}`, { no_symbols: true })
+  ) {
+    // todo: send bad request
+    return
+  }
+
+  // @todo messageid check
+  // @todo check open
+
+  await db.collections.voteAnswer.remove({
+    messageId: new ObjectID(data.messageId),
+    userId: new ObjectID(user),
+    index: data.index
+  })
+
+  addVoteQueue(data.messageId)
 }

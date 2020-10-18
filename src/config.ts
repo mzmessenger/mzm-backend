@@ -78,6 +78,7 @@ export const stream = {
   MESSAGE: 'stream:socket:message',
   UNREAD: 'stream:unread',
   REPLY: 'stream:reply',
+  VOTE: 'stream:vote',
   ELASTICSEARCH_ROOMS: 'stream:elasticsearch:rooms',
   JOB: 'stream:job'
 } as const
@@ -127,4 +128,9 @@ export const lock = {
   INIT_SEARCH_ROOM: 'lock:INIT_SEARCH_ROOM',
   SYNC_SEARCH_ROOM_QUEUE: 'lock:SYNC_SEARCH_ROOM_QUEUE',
   CREATE_ROOM: 'lock:CREATE_ROOM'
-}
+} as const
+
+export const vote = {
+  MAX_QUESTION_NUM: 5,
+  MAX_QUESTION_LENGTH: 100
+} as const

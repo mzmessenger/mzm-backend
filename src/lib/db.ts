@@ -8,20 +8,23 @@ export const collections: {
   users: Collection<User>
   removed: Collection<Removed>
   messages: Collection<Message>
+  voteAnswer: Collection<VoteAnswer>
 } = {
   rooms: null,
   enter: null,
   users: null,
   messages: null,
-  removed: null
-}
+  removed: null,
+  voteAnswer: null
+} as const
 
 export const COLLECTION_NAMES = {
   ROOMS: 'rooms',
   USERS: 'users',
   ENTER: 'enter',
   MESSAGES: 'messages',
-  REMOVED: 'removed'
+  REMOVED: 'removed',
+  VOTE_ANSWER: 'voteAnswers'
 } as const
 
 let connection: MongoClient = null
@@ -42,6 +45,9 @@ export const connect = async (uri: string = MONGODB_URI) => {
   collections.users = db.collection<User>(COLLECTION_NAMES.USERS)
   collections.messages = db.collection<Message>(COLLECTION_NAMES.MESSAGES)
   collections.removed = db.collection<Removed>(COLLECTION_NAMES.REMOVED)
+  collections.voteAnswer = db.collection<VoteAnswer>(
+    COLLECTION_NAMES.VOTE_ANSWER
+  )
 
   if (process.env.NODE_ENV !== 'test') {
     logger.info('[db] connected mongodb')
@@ -108,4 +114,35 @@ export type Message = {
   updated: boolean
   createdAt: Date
   updatedAt: Date
+  vote?: Vote
+}
+
+export const VoteStatusEnum = {
+  CLOSE: 0,
+  OPEN: 1
+} as const
+
+export const VoteTypeEnum = {
+  CHOICE: 'CHOICE'
+}
+
+type Vote = {
+  questions: {
+    text: string
+  }[]
+  status: typeof VoteStatusEnum[keyof typeof VoteStatusEnum]
+  type: typeof VoteTypeEnum[keyof typeof VoteTypeEnum]
+}
+
+export const VoteAnswerEnum = {
+  OK: 0,
+  NG: 1,
+  NA: 2
+} as const
+
+export type VoteAnswer = {
+  messageId: ObjectId
+  userId: ObjectId
+  index: number
+  answer: typeof VoteAnswerEnum[keyof typeof VoteAnswerEnum]
 }
