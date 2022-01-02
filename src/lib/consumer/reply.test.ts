@@ -67,11 +67,9 @@ test('reply', async () => {
   })
 
   const targetRoomId = new ObjectID()
-  const enter = [
-    targetRoomId,
-    new ObjectID(),
-    new ObjectID()
-  ].map((roomId) => ({ userId, roomId, unreadCounter: 0, replied: 0 }))
+  const enter = [targetRoomId, new ObjectID(), new ObjectID()].map(
+    (roomId) => ({ userId, roomId, unreadCounter: 0, replied: 0 })
+  )
   await db.collections.enter.insertMany(enter)
 
   const _replyQueue: ReplyQueue = {

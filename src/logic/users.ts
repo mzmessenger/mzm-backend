@@ -1,4 +1,4 @@
-import { ObjectID } from 'mongodb'
+import { ObjectId } from 'mongodb'
 import isEmpty from 'validator/lib/isEmpty'
 import * as config from '../config'
 import { Room as SendRoom } from '../types'
@@ -24,7 +24,7 @@ export const isValidAccount = (account: string): boolean => {
   return /^[a-zA-Z\d_-]+$/.test(account)
 }
 
-const enterGeneral = async (userId: ObjectID) => {
+const enterGeneral = async (userId: ObjectId) => {
   const general: db.Room = await db.collections.rooms.findOne({
     name: config.room.GENERAL_ROOM_NAME
   })
@@ -37,7 +37,7 @@ const enterGeneral = async (userId: ObjectID) => {
   }
 }
 
-export const initUser = async (userId: ObjectID, account: string) => {
+export const initUser = async (userId: ObjectId, account: string) => {
   const [user] = await Promise.all([
     db.collections.users.insertOne({
       _id: userId,
@@ -54,7 +54,7 @@ export const getRooms = async (userId: string): Promise<SendRoom[]> => {
   const cursor = await db.collections.enter.aggregate<
     db.Enter & { room: db.Room[] }
   >([
-    { $match: { userId: new ObjectID(userId) } },
+    { $match: { userId: new ObjectId(userId) } },
     {
       $lookup: {
         from: db.COLLECTION_NAMES.ROOMS,
@@ -81,7 +81,7 @@ export const getRooms = async (userId: string): Promise<SendRoom[]> => {
 
 export const getAllUserIdsInRoom = async (roomId: string) => {
   const cursor = await db.collections.enter.find({
-    roomId: new ObjectID(roomId)
+    roomId: new ObjectId(roomId)
   })
 
   const userIds: string[] = []

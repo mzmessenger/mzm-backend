@@ -1,4 +1,5 @@
 import * as db from './lib/db'
+import { type Readable } from 'stream'
 
 export type Room = {
   id: string
@@ -123,5 +124,5 @@ export const JobType = {
 
 export type StreamWrapResponse = Promise<{
   headers: { [key: string]: string | number | Date }
-  stream: NodeJS.ReadableStream
+  stream: Readable
 }>

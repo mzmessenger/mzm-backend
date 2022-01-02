@@ -1,4 +1,4 @@
-import { ObjectID } from 'mongodb'
+import { ObjectId } from 'mongodb'
 import { logger } from '../../lib/logger'
 import { lock, release } from '../../lib/redis'
 import * as config from '../../config'
@@ -121,7 +121,7 @@ const putIndex = async () => {
 
 export const initAlias = async () => {
   const lockKey = config.lock.INIT_SEARCH_ROOM
-  const lockVal = new ObjectID().toHexString()
+  const lockVal = new ObjectId().toHexString()
   const locked = await lock(lockKey, lockVal, 1000 * 5)
 
   if (!locked) {
@@ -152,7 +152,7 @@ export const initAlias = async () => {
 }
 
 export const insertRooms = async (roomIds: string[]) => {
-  const ids = roomIds.map((e) => new ObjectID(e))
+  const ids = roomIds.map((e) => new ObjectId(e))
   const cursor = await db.collections.rooms.find({ _id: { $in: ids } })
 
   type Body =
@@ -179,7 +179,7 @@ export const insertRooms = async (roomIds: string[]) => {
   }
 
   const { body: bulkResponse } = await es.bulk({
-    refresh: 'true',
+    refresh: true,
     body: body
   })
   if (bulkResponse.errors) {

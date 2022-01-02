@@ -34,10 +34,7 @@ export const connect = async (uri: string = MONGODB_URI) => {
     return connection
   }
 
-  const client = await MongoClient.connect(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  })
+  const client = await MongoClient.connect(uri)
 
   const db = client.db('mzm')
   collections.rooms = db.collection<Room>(COLLECTION_NAMES.ROOMS)

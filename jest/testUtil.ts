@@ -1,6 +1,6 @@
 import assert from 'assert'
 import { Request } from 'express'
-import { MongoClient, ObjectID } from 'mongodb'
+import { MongoClient, ObjectId } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 
 export const getMockType = (arg) => {
@@ -8,18 +8,15 @@ export const getMockType = (arg) => {
 }
 
 export const mongoSetup = async () => {
-  const mongoServer = new MongoMemoryServer()
-  const uri = await mongoServer.getConnectionString()
+  const mongoServer = await MongoMemoryServer.create()
+  const uri = await mongoServer.getUri()
   return { uri, mongoServer }
 }
 
 export const getDbConnection = async (uri: string) => {
   assert.strictEqual(process.env.NODE_ENV, 'test')
 
-  const client = await MongoClient.connect(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  })
+  const client = await MongoClient.connect(uri)
 
   return client
 }
@@ -38,7 +35,7 @@ export const dropCollection = async (uri: string, name: string) => {
 type TestRequest = Request & { file?: { [key: string]: string | number } }
 
 export const createRequest = (
-  userId: ObjectID | null,
+  userId: ObjectId | null,
   {
     params,
     query,
