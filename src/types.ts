@@ -1,5 +1,6 @@
 import * as db from './lib/db'
 import { type Readable } from 'stream'
+import { type IncomingHttpHeaders } from 'http'
 
 export type Room = {
   id: string
@@ -123,6 +124,6 @@ export const JobType = {
 } as const
 
 export type StreamWrapResponse = Promise<{
-  headers: { [key: string]: string | number | Date }
+  headers: IncomingHttpHeaders
   stream: Readable
 }>

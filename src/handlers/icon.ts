@@ -1,7 +1,8 @@
+import { type IncomingHttpHeaders } from 'http'
 import { promisify } from 'util'
 import { Request } from 'express'
-import axios from 'axios'
-import { ObjectID } from 'mongodb'
+import { request } from 'undici'
+import { ObjectId } from 'mongodb'
 import { NotFound, BadRequest } from '../lib/errors'
 import { getRequestUserId, popParam } from '../lib/utils'
 import * as storage from '../lib/storage'
@@ -16,14 +17,16 @@ const sizeOf = promisify(require('image-size'))
 const returnIconStream = async (key: string) => {
   const head = await storage.headObject({ Key: key })
 
+  const headers: IncomingHttpHeaders = {
+    ETag: head.ETag,
+    'Content-Type': head.ContentType,
+    'Content-Length': `${head.ContentLength}`,
+    'Last-Modified': `${head.LastModified}`,
+    'Cache-Control': head.CacheControl || 'max-age=604800'
+  }
+
   return {
-    headers: {
-      ETag: head.ETag,
-      'Content-Type': head.ContentType,
-      'Content-Length': head.ContentLength,
-      'Last-Modified': head.LastModified,
-      'Cache-Control': head.CacheControl || 'max-age=604800'
-    },
+    headers,
     stream: storage.getObject({ Key: key }).createReadStream()
   }
 }
@@ -36,13 +39,14 @@ export const getUserIcon = async (req: Request): StreamWrapResponse => {
   const version = popParam(req.params.version)
   const user = await db.collections.users.findOne({ account: account })
 
-  const fromIdenticon = async () => {
-    const res = await axios({
-      method: 'GET',
-      url: `https://identicon.mzm.dev/api/identicon/${account}`,
-      responseType: 'stream'
-    })
-    return { headers: res.headers, stream: res.data }
+  const fromIdenticon = async (): StreamWrapResponse => {
+    const res = await request(
+      `https://identicon.mzm.dev/api/identicon/${account}`,
+      {
+        method: 'GET'
+      }
+    )
+    return { headers: res.headers, stream: res.body }
   }
 
   if (user?.icon?.version === version) {
@@ -128,7 +132,7 @@ export const uploadUserIcon = async (req: Request & { file: MulterFile }) => {
   }
 
   await db.collections.users.findOneAndUpdate(
-    { _id: new ObjectID(userId) },
+    { _id: new ObjectId(userId) },
     { $set: update },
     {
       upsert: true
