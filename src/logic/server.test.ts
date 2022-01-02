@@ -87,7 +87,7 @@ test('errorHandler (Internal Server Error)', (cb) => {
 
   const res = { status: jest.fn().mockReturnThis(), send }
 
-  errorHandler(error, {}, (res as any) as Response, jest.fn())
+  errorHandler(error, {}, res as any as Response, jest.fn())
 })
 
 test.each([
@@ -106,7 +106,7 @@ test.each([
 
   const res = { status: jest.fn().mockReturnThis(), send }
 
-  errorHandler(error, {}, (res as any) as Response, jest.fn())
+  errorHandler(error, {}, res as any as Response, jest.fn())
 })
 
 test('checkLogin (success)', (cb) => {
@@ -119,7 +119,7 @@ test('checkLogin (success)', (cb) => {
     cb()
   })
 
-  checkLogin((req as any) as Request, {} as Response, next)
+  checkLogin(req as any as Request, {} as Response, next)
 })
 
 test.each([[null], [undefined], ['']])('checkLogin send 401 (%s)', (userId) => {
@@ -137,7 +137,7 @@ test.each([[null], [undefined], ['']])('checkLogin send 401 (%s)', (userId) => {
 
   const res = { status: jest.fn().mockReturnThis(), send }
 
-  checkLogin((req as any) as Request, (res as any) as Response, jest.fn())
+  checkLogin(req as any as Request, res as any as Response, jest.fn())
 })
 
 test('init', async () => {

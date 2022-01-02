@@ -19,7 +19,7 @@ test('wrap success', (cb) => {
   })
   const res = { status: jest.fn().mockReturnThis(), json }
 
-  wrap(fn)({} as Request, (res as any) as Response, jest.fn())
+  wrap(fn)({} as Request, res as any as Response, jest.fn())
 })
 
 test('wrap error', (cb) => {
@@ -40,5 +40,5 @@ test('wrap error', (cb) => {
     cb()
   })
 
-  wrap(fn)({} as Request, (res as any) as Response, next)
+  wrap(fn)({} as Request, res as any as Response, next)
 })

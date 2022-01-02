@@ -1,4 +1,4 @@
-import { ObjectID } from 'mongodb'
+import { ObjectId } from 'mongodb'
 import isEmpty from 'validator/lib/isEmpty'
 import * as db from '../lib/db'
 import { logger } from '../lib/logger'
@@ -8,7 +8,7 @@ import { addUpdateSearchRoomQueue } from '../lib/provider'
 
 export const initGeneral = async () => {
   const lockKey = config.lock.INIT_GENERAL_ROOM
-  const lockVal = new ObjectID().toHexString()
+  const lockVal = new ObjectId().toHexString()
   const locked = await lock(lockKey, lockVal, 1000)
 
   if (!locked) {
@@ -60,7 +60,7 @@ export const isValidateRoomName = (
   return { valid: true }
 }
 
-export const enterRoom = async (userId: ObjectID, roomId: ObjectID) => {
+export const enterRoom = async (userId: ObjectId, roomId: ObjectId) => {
   const enter: Omit<db.Enter, '_id'> = {
     userId: userId,
     roomId: roomId,
@@ -84,11 +84,11 @@ export const enterRoom = async (userId: ObjectID, roomId: ObjectID) => {
 }
 
 export const createRoom = async (
-  userId: ObjectID,
+  userId: ObjectId,
   name: string
 ): Promise<db.Room> => {
   const lockKey = config.lock.CREATE_ROOM + ':' + name
-  const lockVal = new ObjectID().toHexString()
+  const lockVal = new ObjectId().toHexString()
   const locked = await lock(lockKey, lockVal, 1000)
 
   if (!locked) {

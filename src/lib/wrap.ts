@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express'
 import { StreamWrapResponse } from '../types'
 
 interface WrapFn {
-  (req: Request): Promise<object | void>
+  (_req: Request): Promise<object | void>
 }
 
 export const wrap = (fn: WrapFn) => {
@@ -18,7 +18,7 @@ export const wrap = (fn: WrapFn) => {
 }
 
 interface StreamWrapFn {
-  (req: Request): StreamWrapResponse
+  (_req: Request): StreamWrapResponse
 }
 
 export const streamWrap = (fn: StreamWrapFn) => {
