@@ -1,9 +1,9 @@
-import { ObjectID } from 'mongodb'
+import { ObjectId } from 'mongodb'
 import * as db from '../lib/db'
 import { createUserIconPath } from '../lib/utils'
 import { Message } from '../types'
 
-export const getVoteAnswers = async (messageId: ObjectID) => {
+export const getVoteAnswers = async (messageId: ObjectId) => {
   const answers: Message['vote']['answers'] = []
 
   const cursor = await db.collections.voteAnswer.aggregate<

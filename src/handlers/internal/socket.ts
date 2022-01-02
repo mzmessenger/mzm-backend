@@ -1,4 +1,4 @@
-import { ObjectID } from 'mongodb'
+import { ObjectId } from 'mongodb'
 import escape from 'validator/lib/escape'
 import unescape from 'validator/lib/unescape'
 import trim from 'validator/lib/trim'
@@ -69,7 +69,7 @@ export type ReceiveMessage =
 export const getRooms = async (userId: string): Promise<SendMessageType> => {
   const [user, rooms] = await Promise.all([
     db.collections.users.findOne<Pick<db.User, 'roomOrder'>>(
-      { _id: new ObjectID(userId) },
+      { _id: new ObjectId(userId) },
       { projection: { roomOrder: 1 } }
     ),
     getRoomsLogic(userId)
@@ -133,7 +133,7 @@ export const sendMessage = async (user: string, data: SendMessage) => {
   }
 
   const u = await db.collections.users.findOne({
-    _id: new ObjectID(user)
+    _id: new ObjectId(user)
   })
   const send: SendMessageType = {
     user: null,
@@ -185,7 +185,7 @@ type IineMessage = {
 
 export const iine = async (user: string, data: IineMessage) => {
   const target = await db.collections.messages.findOne({
-    _id: new ObjectID(data.id)
+    _id: new ObjectId(data.id)
   })
 
   await db.collections.messages.updateOne(
@@ -218,7 +218,7 @@ export const modifyMessage = async (user: string, data: ModifyMessage) => {
   if (isEmpty(message) || isEmpty(id)) {
     return
   }
-  const targetId = new ObjectID(id)
+  const targetId = new ObjectId(id)
 
   const from = await db.collections.messages.findOne({
     _id: targetId
@@ -236,7 +236,7 @@ export const modifyMessage = async (user: string, data: ModifyMessage) => {
   )
 
   const u = await db.collections.users.findOne({
-    _id: new ObjectID(user)
+    _id: new ObjectId(user)
   })
   const send: SendMessageType = {
     user: user,
@@ -275,8 +275,8 @@ export const getMessagesFromRoom = async (
     return
   }
   const filter: Pick<db.Enter, 'userId' | 'roomId'> = {
-    userId: new ObjectID(user),
-    roomId: new ObjectID(room)
+    userId: new ObjectId(user),
+    roomId: new ObjectId(room)
   }
   const exist = await db.collections.enter.findOne(filter)
   // todo: send bad request
@@ -311,7 +311,7 @@ export const enterRoom = async (
   let room: db.Room = null
   if (data.id) {
     const id = escape(trim(data.id))
-    room = await db.collections.rooms.findOne({ _id: new ObjectID(id) })
+    room = await db.collections.rooms.findOne({ _id: new ObjectId(id) })
   } else if (data.name) {
     const name = popParam(decodeURIComponent(data.name))
     const valid = isValidateRoomName(name)
@@ -329,7 +329,7 @@ export const enterRoom = async (
     if (found) {
       room = found
     } else {
-      room = await createRoom(new ObjectID(user), name)
+      room = await createRoom(new ObjectId(user), name)
     }
   }
 
@@ -343,7 +343,7 @@ export const enterRoom = async (
     }
   }
 
-  await logicEnterRoom(new ObjectID(user), room._id)
+  await logicEnterRoom(new ObjectId(user), room._id)
 
   return {
     user,
@@ -366,8 +366,8 @@ export const readMessage = async (user: string, data: ReadMessage) => {
   }
   await db.collections.enter.updateOne(
     {
-      userId: new ObjectID(user),
-      roomId: new ObjectID(data.room)
+      userId: new ObjectId(user),
+      roomId: new ObjectId(data.room)
     },
     { $set: { unreadCounter: 0, replied: 0 } }
   )
@@ -396,7 +396,7 @@ export const sortRooms = async (user: string, data: SortRooms) => {
   }
 
   await db.collections.users.updateOne(
-    { _id: new ObjectID(user) },
+    { _id: new ObjectId(user) },
     { $set: { roomOrder } }
   )
 
@@ -406,7 +406,7 @@ export const sortRooms = async (user: string, data: SortRooms) => {
 type OpenRoom = { cmd: typeof ReceiveMessageCmd.ROOMS_OPEN; roomId: string }
 
 export const openRoom = async (user: string, data: OpenRoom) => {
-  const roomId = new ObjectID(data.roomId)
+  const roomId = new ObjectId(data.roomId)
 
   const general = await db.collections.rooms.findOne({
     name: config.room.GENERAL_ROOM_NAME
@@ -417,8 +417,8 @@ export const openRoom = async (user: string, data: OpenRoom) => {
   }
 
   await db.collections.rooms.updateOne(
-    { _id: new ObjectID(data.roomId) },
-    { $set: { status: db.RoomStatusEnum.OPEN, updatedBy: new ObjectID(user) } }
+    { _id: new ObjectId(data.roomId) },
+    { $set: { status: db.RoomStatusEnum.OPEN, updatedBy: new ObjectId(user) } }
   )
   addUpdateSearchRoomQueue([data.roomId])
   // @todo 伝播
@@ -427,7 +427,7 @@ export const openRoom = async (user: string, data: OpenRoom) => {
 type CloseRoom = { cmd: typeof ReceiveMessageCmd.ROOMS_CLOSE; roomId: string }
 
 export const closeRoom = async (user: string, data: CloseRoom) => {
-  const roomId = new ObjectID(data.roomId)
+  const roomId = new ObjectId(data.roomId)
 
   const general = await db.collections.rooms.findOne({
     name: config.room.GENERAL_ROOM_NAME
@@ -438,8 +438,8 @@ export const closeRoom = async (user: string, data: CloseRoom) => {
   }
 
   await db.collections.rooms.updateOne(
-    { _id: new ObjectID(data.roomId) },
-    { $set: { status: db.RoomStatusEnum.CLOSE, updatedBy: new ObjectID(user) } }
+    { _id: new ObjectId(data.roomId) },
+    { $set: { status: db.RoomStatusEnum.CLOSE, updatedBy: new ObjectId(user) } }
   )
 
   addUpdateSearchRoomQueue([data.roomId])
@@ -479,8 +479,8 @@ export const sendVoteAnswer = async (user: string, data: SendVoteAnswer) => {
 
   await db.collections.voteAnswer.updateOne(
     {
-      messageId: new ObjectID(data.messageId),
-      userId: new ObjectID(user),
+      messageId: new ObjectId(data.messageId),
+      userId: new ObjectId(user),
       index: data.index
     },
     {
@@ -514,9 +514,9 @@ export const removeVoteAnswer = async (
   // @todo messageid check
   // @todo check open
 
-  await db.collections.voteAnswer.remove({
-    messageId: new ObjectID(data.messageId),
-    userId: new ObjectID(user),
+  await db.collections.voteAnswer.deleteOne({
+    messageId: new ObjectId(data.messageId),
+    userId: new ObjectId(user),
     index: data.index
   })
 
