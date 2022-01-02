@@ -8,7 +8,7 @@ export const MONGODB_URI =
 
 export const API_LISTEN = 3001
 
-export const WORKER_NUM = 2
+export const WORKER_NUM = process.env.WORKER_NUM ?? 1
 
 export const account = {
   MIN_LENGTH: 2,
