@@ -1,11 +1,15 @@
-jest.mock('axios')
+jest.mock('undici', () => {
+  return {
+    request: jest.fn()
+  }
+})
 jest.mock('image-size')
 jest.mock('../lib/logger')
 jest.mock('../lib/storage')
 
 import { Readable } from 'stream'
-import { ObjectID } from 'mongodb'
-import axios from 'axios'
+import { ObjectId } from 'mongodb'
+import { request } from 'undici'
 import sizeOf from 'image-size'
 import { mongoSetup, createRequest, getMockType } from '../../jest/testUtil'
 import * as db from '../lib/db'
@@ -32,7 +36,7 @@ afterAll(async () => {
 })
 
 test('getUserIcon from storage', async () => {
-  const userId = new ObjectID()
+  const userId = new ObjectId()
   const account = userId.toHexString()
   const version = '12345'
 
@@ -66,10 +70,12 @@ test('getUserIcon from storage', async () => {
   expect(getObjectMock.mock.calls.length).toStrictEqual(1)
   expect(res.headers.ETag).toStrictEqual(headers.ETag)
   expect(res.headers['Content-Type']).toStrictEqual(headers.ContentType)
-  expect(res.headers['Content-Length']).toStrictEqual(headers.ContentLength)
-  expect((res.headers['Last-Modified'] as Date).getTime()).toStrictEqual(
-    headers.LastModified.getTime()
+  expect(res.headers['Content-Length']).toStrictEqual(
+    `${headers.ContentLength}`
   )
+  expect(
+    new Date(res.headers['Last-Modified'] as string).getTime()
+  ).toStrictEqual(headers.LastModified.getTime())
   expect(res.headers['Cache-Control']).toStrictEqual(headers.CacheControl)
   expect(res.stream).toStrictEqual(readableStream)
 })
@@ -80,7 +86,7 @@ test.each([
 ])(
   'getUserIcon from identicon (user: %s, icon version: %s, request icon version: %s)',
   async (iconVersion, requestVersion) => {
-    const id = new ObjectID()
+    const id = new ObjectId()
     const account = id.toHexString()
     const user: db.User = {
       _id: id,
@@ -94,7 +100,7 @@ test.each([
 
     const headObjectMock = getMockType(storage.headObject)
     const getObjectMock = getMockType(storage.getObject)
-    const axiosMock = getMockType(axios)
+    const requestMock = getMockType(request)
     const headers = {
       ETag: 'etag',
       'Content-Type': 'image/png',
@@ -103,7 +109,7 @@ test.each([
       'Cache-Control': 'max-age=604800'
     } as const
     const readableStream = new Readable()
-    axiosMock.mockResolvedValueOnce({ headers, data: readableStream })
+    requestMock.mockResolvedValueOnce({ headers, body: readableStream })
 
     const req = createRequest(null, {
       params: { account, version: requestVersion }
@@ -113,7 +119,7 @@ test.each([
 
     expect(headObjectMock.mock.calls.length).toStrictEqual(0)
     expect(getObjectMock.mock.calls.length).toStrictEqual(0)
-    expect(axiosMock.mock.calls.length).toStrictEqual(1)
+    expect(requestMock.mock.calls.length).toStrictEqual(1)
     for (const [key, val] of Object.entries(headers)) {
       expect(res.headers[key]).toStrictEqual(val)
     }
@@ -122,7 +128,7 @@ test.each([
 )
 
 test('getUserIcon from identicon: not found on storage', async () => {
-  const id = new ObjectID()
+  const id = new ObjectId()
   const account = id.toHexString()
   const user: db.User = {
     _id: id,
@@ -137,7 +143,7 @@ test('getUserIcon from identicon: not found on storage', async () => {
 
   const headObjectMock = getMockType(storage.headObject)
   headObjectMock.mockRejectedValueOnce({ statusCode: 404 })
-  const axiosMock = getMockType(axios)
+  const requestMock = getMockType(request)
   const headers = {
     ETag: 'etag',
     'Content-Type': 'image/png',
@@ -146,7 +152,7 @@ test('getUserIcon from identicon: not found on storage', async () => {
     'Cache-Control': 'max-age=604800'
   } as const
   const readableStream = new Readable()
-  axiosMock.mockResolvedValueOnce({ headers, data: readableStream })
+  requestMock.mockResolvedValueOnce({ headers, body: readableStream })
 
   const req = createRequest(null, {
     params: { account, version: user.icon.version }
@@ -158,9 +164,9 @@ test('getUserIcon from identicon: not found on storage', async () => {
   expect(res.headers.ETag).toStrictEqual(headers.ETag)
   expect(res.headers['Content-Type']).toStrictEqual(headers['Content-Type'])
   expect(res.headers['Content-Length']).toStrictEqual(headers['Content-Length'])
-  expect((res.headers['Last-Modified'] as Date).getTime()).toStrictEqual(
-    headers['Last-Modified'].getTime()
-  )
+  expect(
+    new Date(res.headers['Last-Modified'] as string).getTime()
+  ).toStrictEqual(headers['Last-Modified'].getTime())
   expect(res.headers['Cache-Control']).toStrictEqual(headers['Cache-Control'])
   expect(res.stream).toStrictEqual(readableStream)
 })
@@ -180,7 +186,7 @@ test('getUserIcon BadRequest: no account', async () => {
 })
 
 test('uploadUserIcon', async () => {
-  const userId = new ObjectID()
+  const userId = new ObjectId()
 
   await db.collections.users.insertOne({
     _id: userId,
@@ -223,7 +229,7 @@ test.each([['image/gif'], ['image/svg+xml']])(
   async (mimetype) => {
     expect.assertions(1)
 
-    const userId = new ObjectID()
+    const userId = new ObjectId()
 
     const file = {
       key: 'filekey',
@@ -247,7 +253,7 @@ test.each([['image/gif'], ['image/svg+xml']])(
 test('uploadUserIcon validation: size over', async () => {
   expect.assertions(1)
 
-  const userId = new ObjectID()
+  const userId = new ObjectId()
 
   const file = {
     key: 'filekey',
@@ -278,7 +284,7 @@ test('uploadUserIcon validation: size over', async () => {
 test('uploadUserIcon validation: not square', async () => {
   expect.assertions(1)
 
-  const userId = new ObjectID()
+  const userId = new ObjectId()
 
   const file = {
     key: 'filekey',
@@ -307,7 +313,7 @@ test('uploadUserIcon validation: not square', async () => {
 })
 
 test('getRoomIcon', async () => {
-  const roomId = new ObjectID()
+  const roomId = new ObjectId()
   const name = roomId.toHexString()
   const version = '12345'
 
@@ -343,10 +349,12 @@ test('getRoomIcon', async () => {
   expect(getObjectMock.mock.calls.length).toStrictEqual(1)
   expect(res.headers.ETag).toStrictEqual(headers.ETag)
   expect(res.headers['Content-Type']).toStrictEqual(headers.ContentType)
-  expect(res.headers['Content-Length']).toStrictEqual(headers.ContentLength)
-  expect((res.headers['Last-Modified'] as Date).getTime()).toStrictEqual(
-    headers.LastModified.getTime()
+  expect(res.headers['Content-Length']).toStrictEqual(
+    `${headers.ContentLength}`
   )
+  expect(
+    new Date(res.headers['Last-Modified'] as string).getTime()
+  ).toStrictEqual(headers.LastModified.getTime())
   expect(res.headers['Cache-Control']).toStrictEqual(headers.CacheControl)
   expect(res.stream).toStrictEqual(readableStream)
 })
@@ -368,7 +376,7 @@ test('getRoomIcon BadRequest: no room name', async () => {
 test('getRoomIcon NotFound: different version', async () => {
   expect.assertions(1)
 
-  const roomId = new ObjectID()
+  const roomId = new ObjectId()
   const name = roomId.toHexString()
   const version = '12345'
 
@@ -394,7 +402,7 @@ test('getRoomIcon NotFound: different version', async () => {
 test('getRoomIcon NotFound: not found on storage', async () => {
   expect.assertions(1)
 
-  const roomId = new ObjectID()
+  const roomId = new ObjectId()
   const name = roomId.toHexString()
   const version = '12345'
 
@@ -421,7 +429,7 @@ test('getRoomIcon NotFound: not found on storage', async () => {
 })
 
 test('uploadRoomIcon', async () => {
-  const roomId = new ObjectID()
+  const roomId = new ObjectId()
   const name = roomId.toHexString()
 
   await db.collections.rooms.insertOne({
@@ -454,7 +462,7 @@ test('uploadRoomIcon', async () => {
     path: '/path/to/file'
   }
 
-  const req = createRequest(new ObjectID(), {
+  const req = createRequest(new ObjectId(), {
     file,
     params: { roomname: name }
   })
@@ -472,7 +480,7 @@ test.each([['image/gif'], ['image/svg+xml']])(
   async (mimetype) => {
     expect.assertions(1)
 
-    const name = new ObjectID().toHexString()
+    const name = new ObjectId().toHexString()
 
     const file = {
       key: 'filekey',
@@ -483,7 +491,7 @@ test.each([['image/gif'], ['image/svg+xml']])(
       path: '/path/to/file'
     }
 
-    const req = createRequest(new ObjectID(), {
+    const req = createRequest(new ObjectId(), {
       file,
       params: { roomname: name }
     })
@@ -516,7 +524,7 @@ test('uploadRoomIcon: validation: size over ', async () => {
     })
   })
 
-  const req = createRequest(new ObjectID(), { file })
+  const req = createRequest(new ObjectId(), { file })
 
   try {
     await icon.uploadRoomIcon(req as any)
@@ -528,7 +536,7 @@ test('uploadRoomIcon: validation: size over ', async () => {
 test('uploadUserIcon validation: not square', async () => {
   expect.assertions(1)
 
-  const userId = new ObjectID()
+  const userId = new ObjectId()
 
   const file = {
     key: 'filekey',
